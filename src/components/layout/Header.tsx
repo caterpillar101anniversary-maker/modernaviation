@@ -20,7 +20,9 @@ const MENU_ID = "primary-menu";
 
 /** In-page anchors never count as the active section. */
 function isActive(href: string, pathname: string) {
-  return href.startsWith("/") && !href.includes("#") && pathname.startsWith(href);
+  return (
+    href.startsWith("/") && !href.includes("#") && pathname.startsWith(href)
+  );
 }
 
 export function Header() {
@@ -56,12 +58,19 @@ export function Header() {
       )}
     >
       <div className="mx-auto flex h-14 max-w-320 items-center justify-between px-5 sm:px-6 lg:h-18 lg:px-10">
-        <Link href="/" aria-label="Modern Aviation CLT home" className="rounded-control">
+        <Link
+          href="/"
+          aria-label="Modern Aviation CLT home"
+          className="rounded-control"
+        >
           <Wordmark />
         </Link>
 
         {/* Desktop navigation (≥1024px) */}
-        <nav className="hidden lg:flex lg:items-center lg:gap-8" aria-label="Primary">
+        <nav
+          className="hidden lg:flex lg:items-center lg:gap-8"
+          aria-label="Primary"
+        >
           {navItems.map((item) => {
             const active = isActive(item.href, pathname);
             return (
@@ -86,9 +95,9 @@ export function Header() {
 
         {/* Desktop actions — no accounts, so the phone is the second route in. */}
         <div className="hidden lg:flex lg:items-center lg:gap-2">
-          <Button asChild variant="ghost">
+          {/* <Button asChild variant="ghost">
             <a href={brand.phoneHref}>{brand.phoneDisplay}</a>
-          </Button>
+          </Button> */}
           <Button asChild variant="primary">
             <Link href="/request">Request a quote</Link>
           </Button>
@@ -150,9 +159,9 @@ export function Header() {
             <Button asChild variant="primary" size="lg">
               <Link href="/request">Request a quote</Link>
             </Button>
-            <Button asChild variant="ghost">
+            {/* <Button asChild variant="ghost">
               <a href={brand.phoneHref}>{brand.phoneDisplay}</a>
-            </Button>
+            </Button> */}
           </div>
         </nav>
       )}

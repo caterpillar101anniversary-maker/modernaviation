@@ -203,13 +203,13 @@ export default function HomePage() {
                   <ArrowRight size={20} strokeWidth={1.5} />
                 </Link>
               </Button>
-              <a
+              {/* <a
                 href={brand.phoneHref}
                 className="inline-flex items-center gap-2 type-data-lg text-paper transition-colors duration-120 hover:text-cyan-400"
               >
                 <Phone size={20} strokeWidth={1.5} />
                 {brand.phoneDisplay}
-              </a>
+              </a> */}
             </div>
           </div>
         </Container>

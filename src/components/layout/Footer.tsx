@@ -49,14 +49,15 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Wordmark dark />
             <p className="mt-4 type-body-sm max-w-56 text-ink-ondark">
-              On-demand private jet charter. Tell us the trip, get a firm quote in twenty minutes.
+              On-demand private jet charter. Tell us the trip, get a firm quote
+              in twenty minutes.
             </p>
-            <a
+            {/* <a
               href={brand.phoneHref}
               className="mt-4 inline-block type-data-lg text-paper transition-colors duration-120 hover:text-cyan-400"
             >
               {brand.phoneDisplay}
-            </a>
+            </a> */}
           </div>
 
           {columns.map((col) => (
@@ -80,9 +81,13 @@ export function Footer() {
 
         {/* Bottom bar — the disclosure here is legally load-bearing (§11.13). */}
         <div className="mt-16 border-t border-ink-800 pt-8">
-          <p className="type-body-sm max-w-200 text-ink-400">{brand.disclosure}</p>
+          <p className="type-body-sm max-w-200 text-ink-400">
+            {brand.disclosure}
+          </p>
           <div className="mt-4 flex flex-col gap-1 md:flex-row md:items-center md:gap-6">
-            <span className="type-data-sm text-ink-400">{brand.certificate}</span>
+            <span className="type-data-sm text-ink-400">
+              {brand.certificate}
+            </span>
             <span className="type-data-sm text-ink-400">{brand.address}</span>
           </div>
         </div>

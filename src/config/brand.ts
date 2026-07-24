@@ -8,7 +8,7 @@ export const brand = {
   tagline:
     "Private jet charter from Charlotte Douglas, quoted in twenty minutes.",
   // A visible phone number is a trust element for this audience (§13.1 §7).
-  phoneDisplay: "+1 704-359-0440",
+  phoneDisplay: "+1 704-777-0440",
   phoneHref: "tel:+17043590440",
   email: "CLT@modern-aviation.com",
   // Legally load-bearing disclosure — never remove for visual balance (§11.13).
