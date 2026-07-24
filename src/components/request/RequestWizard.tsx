@@ -418,7 +418,7 @@ function Received({ reference, email }: { reference: string; email: string }) {
         <div className="mt-8 rounded-card border border-line-200 bg-paper p-6">
           <p className="type-label text-ink-400">Your reference</p>
           <p className="mt-2 type-data-xl text-ink-700">{reference}</p>
-          <p className="mt-3 type-body-sm text-ink-400">
+          {/* <p className="mt-3 type-body-sm text-ink-400">
             Quote it if you call us on{" "}
             <a
               href={brand.phoneHref}
@@ -427,7 +427,7 @@ function Received({ reference, email }: { reference: string; email: string }) {
               {brand.phoneDisplay}
             </a>
             .
-          </p>
+          </p> */}
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
