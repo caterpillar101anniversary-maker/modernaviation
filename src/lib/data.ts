@@ -486,80 +486,9 @@ export interface Trip {
   nextAction?: { label: string; href: string };
 }
 
-export const trips: Trip[] = [
-  {
-    id: "t-clt-7742",
-    code: "MAC-7742",
-    status: "upcoming",
-    from: { iata: "CLT", icao: "KCLT", name: "Charlotte Douglas Intl", time: "09:40", tz: "EDT" },
-    to: { iata: "TEB", icao: "KTEB", name: "Teterboro", time: "11:20", tz: "EDT" },
-    dateLabel: "Fri 14 Aug 2026",
-    durationMinutes: 100,
-    aircraftModel: "Citation XLS+",
-    registration: "N720MA",
-    operator: "Modern Air Charter",
-    fboFrom: "Wilson Air Center, Charlotte",
-    fboTo: "Signature Flight Support, Teterboro",
-    passengers: [
-      { name: "Katherine Ross", role: "Lead passenger", nationality: "United States", weightKg: 66 },
-      { name: "Daniel Cho", role: "Passenger", nationality: "United States", weightKg: 84 },
-      { name: "Marcus Bell", role: "Passenger", nationality: "United States", weightKg: 91 },
-    ],
-    nextAction: { label: "Add passenger manifest", href: "/trips/t-clt-7742#manifest" },
-  },
-  {
-    id: "t-clt-7610",
-    code: "MAC-7610",
-    status: "upcoming",
-    from: { iata: "TEB", icao: "KTEB", name: "Teterboro", time: "16:20", tz: "EDT" },
-    to: { iata: "CLT", icao: "KCLT", name: "Charlotte Douglas Intl", time: "18:05", tz: "EDT" },
-    dateLabel: "Sun 16 Aug 2026",
-    durationMinutes: 105,
-    aircraftModel: "Phenom 300E",
-    registration: "N355CJ",
-    operator: "Carolina Jet Partners",
-    fboFrom: "Signature Flight Support, Teterboro",
-    fboTo: "Wilson Air Center, Charlotte",
-    passengers: [{ name: "Katherine Ross", role: "Lead passenger", nationality: "United States", weightKg: 66 }],
-    nextAction: { label: "Complete payment", href: "/quotes/q-8242" },
-  },
-  {
-    id: "t-clt-7433",
-    code: "MAC-7433",
-    status: "past",
-    from: { iata: "CLT", icao: "KCLT", name: "Charlotte Douglas Intl", time: "07:10", tz: "EDT" },
-    to: { iata: "PBI", icao: "KPBI", name: "Palm Beach Intl", time: "09:05", tz: "EDT" },
-    dateLabel: "Wed 02 Jul 2026",
-    durationMinutes: 130,
-    aircraftModel: "King Air 350",
-    registration: "N350KA",
-    operator: "Carolina Jet Partners",
-    fboFrom: "Wilson Air Center, Charlotte",
-    fboTo: "Signature Flight Support, West Palm Beach",
-    passengers: [{ name: "Katherine Ross", role: "Lead passenger", nationality: "United States", weightKg: 66 }],
-  },
-];
+// Trips are real bookings stored in Postgres — see src/lib/mappers.ts
+// (bookingToTrip) and the createBooking action. The Trip/Passenger types above
+// describe the shape the itinerary UI renders.
 
-export function findTrip(id: string): Trip | undefined {
-  return trips.find((t) => t.id === id);
-}
-
-/* ─────────────── Customers (email autofill demo) ─────────────── */
-// CLAUDE.md: returning customers are recognised by email and their details
-// autofill. This is a demo lookup; a real directory replaces it.
-export interface Customer {
-  email: string;
-  name: string;
-  phone: string;
-  company?: string;
-}
-
-export const customers: Customer[] = [
-  { email: "katherine.ross@rossholdings.com", name: "Katherine Ross", phone: "+1 704 555 0142", company: "Ross Holdings" },
-  { email: "d.cho@piedmontcapital.com", name: "Daniel Cho", phone: "+1 980 555 0177", company: "Piedmont Capital" },
-];
-
-export function findCustomer(email: string): Customer | undefined {
-  const e = email.trim().toLowerCase();
-  return customers.find((c) => c.email.toLowerCase() === e);
-}
+// Returning users are recognised by email against the real users table — see
+// lookupUserByEmail in src/app/actions/auth.ts (backed by Postgres via Prisma).

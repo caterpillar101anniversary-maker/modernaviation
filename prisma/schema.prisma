@@ -1,0 +1,63 @@
+// Modern Aviation CLT — data model.
+// Real user data is stored here; see src/lib/db.ts for the client.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+
+  @@map("users")
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  reference     String   @unique
+  status        String   @default("confirmed") // confirmed | pending | cancelled
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+  email  String
+
+  // Denormalised flight details — quotes are demo/not in the DB yet, so the
+  // itinerary renders entirely from what we store here.
+  fromIata String
+  fromIcao String
+  fromName String
+  fromTime String?
+  toIata   String
+  toIcao   String
+  toName   String
+  toTime   String?
+  tz       String?
+  dateLabel     String
+  durationMin   Int
+
+  aircraftModel String
+  registration  String
+  operator      String
+
+  totalUsd      Int
+  paymentMethod String
+  fboFrom       String?
+  fboTo         String?
+
+  passengers Json // [{ name, nationality, weightKg }]
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("bookings")
+}

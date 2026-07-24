@@ -11,6 +11,7 @@ import { CancellationPolicy } from "@/components/aviation/CancellationPolicy";
 import { cn } from "@/lib/cn";
 import { formatUsd } from "@/lib/format";
 import type { Quote } from "@/lib/data";
+import { createBooking, type BookingPayload } from "@/app/actions/booking";
 
 type Unit = "kg" | "lb";
 type PayMethod = "bank" | "card" | "paypal" | "account";
@@ -43,10 +44,20 @@ const FBOS: Record<string, string[]> = {
   TEB: ["Signature Flight Support TEB", "Jet Aviation TEB"],
 };
 
-export function BookingClose({ quote, international }: { quote: Quote; international: boolean }) {
-  const [pax, setPax] = useState<Pax[]>(() =>
-    Array.from({ length: Math.min(2, quote.seats) }, emptyPax),
-  );
+export function BookingClose({
+  quote,
+  international,
+  user,
+}: {
+  quote: Quote;
+  international: boolean;
+  user: { firstName: string; lastName: string; email: string };
+}) {
+  const [pax, setPax] = useState<Pax[]>(() => {
+    const arr = Array.from({ length: Math.min(2, quote.seats) }, emptyPax);
+    arr[0].name = `${user.firstName} ${user.lastName}`;
+    return arr;
+  });
   const [fboFrom, setFboFrom] = useState(FBOS[quote.from.iata]?.[0] ?? "");
   const [fboTo, setFboTo] = useState(FBOS[quote.to.iata]?.[0] ?? "");
   const [groundTransport, setGroundTransport] = useState(false);
@@ -60,6 +71,9 @@ export function BookingClose({ quote, international }: { quote: Quote; internati
   const [signature, setSignature] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [reference, setReference] = useState("");
+  const [tripId, setTripId] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
 
   const setP = (i: number, patch: Partial<Pax>) =>
@@ -77,7 +91,6 @@ export function BookingClose({ quote, international }: { quote: Quote; internati
 
   const discount = couponApplied ? Math.round(quote.totalUsd * 0.05) : 0;
   const amountDue = quote.totalUsd - discount;
-  const reference = `MAC-${quote.id.replace("q-", "")}-${quote.from.iata}${quote.to.iata}`;
 
   const copy = (label: string, text: string) => {
     navigator.clipboard?.writeText(text);
@@ -85,12 +98,41 @@ export function BookingClose({ quote, international }: { quote: Quote; internati
     setTimeout(() => setCopied(null), 1500);
   };
 
-  const submit = () => {
+  const toKg = (p: Pax) => {
+    const w = parseFloat(p.weight) || 0;
+    return Math.round(p.unit === "lb" ? w * 0.4536 : w);
+  };
+
+  const submit = async () => {
     if (!signature.trim()) return setError("Type your full name to sign the charter agreement.");
     if (pax.some((p) => !p.name.trim() || !p.weight.trim()))
       return setError("Every passenger needs a full legal name and a weight for weight and balance.");
     if (!ack) return setError("You must acknowledge the cancellation policy before paying.");
     setError(null);
+    setSubmitting(true);
+
+    const payload: BookingPayload = {
+      quoteId: quote.id,
+      from: { iata: quote.from.iata, icao: quote.from.icao, name: quote.from.name, time: quote.from.time },
+      to: { iata: quote.to.iata, icao: quote.to.icao, name: quote.to.name, time: quote.to.time },
+      tz: quote.from.tz,
+      dateLabel: quote.dateLabel ?? "Fri 14 Aug 2026",
+      durationMin: quote.durationMinutes,
+      aircraftModel: quote.aircraftModel,
+      registration: quote.registration,
+      operator: quote.operator,
+      totalUsd: amountDue,
+      paymentMethod: method,
+      fboFrom,
+      fboTo,
+      passengers: pax.map((p) => ({ name: p.name, nationality: p.nationality, weightKg: toKg(p) })),
+    };
+
+    const result = await createBooking(payload);
+    setSubmitting(false);
+    if (!result.ok) return setError(result.error);
+    setReference(result.reference);
+    setTripId(result.id);
     setConfirmed(true);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -111,10 +153,10 @@ export function BookingClose({ quote, international }: { quote: Quote; internati
         </div>
         <div className="mt-8 flex justify-center gap-3">
           <Button asChild>
-            <Link href="/trips">View my trips</Link>
+            <Link href={`/trips/${tripId}`}>View itinerary</Link>
           </Button>
           <Button asChild variant="secondary">
-            <Link href="/">Back to home</Link>
+            <Link href="/trips">All my trips</Link>
           </Button>
         </div>
       </div>
@@ -405,8 +447,8 @@ export function BookingClose({ quote, international }: { quote: Quote; internati
             <p className="mt-2 type-data-xl text-paper">{formatUsd(amountDue)}</p>
             <p className="mt-1 type-data-sm text-ink-ondark">USD</p>
             {discount > 0 && <p className="mt-2 type-data-sm text-ok-600">Coupon −{formatUsd(discount)}</p>}
-            <Button onClick={submit} variant="onDark" size="lg" className="mt-5 w-full">
-              {method === "bank" ? "Confirm booking" : "Confirm and pay"}
+            <Button onClick={submit} variant="onDark" size="lg" className="mt-5 w-full" disabled={submitting}>
+              {submitting ? "Confirming…" : method === "bank" ? "Confirm booking" : "Confirm and pay"}
             </Button>
             <p className="mt-3 type-body-sm text-ink-ondark">
               You&apos;ll receive a confirmation with the itinerary and receipt.

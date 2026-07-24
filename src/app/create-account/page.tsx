@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { Button } from "@/components/primitives/Button";
 import { TextField } from "@/components/primitives/Field";
-import { signIn, type AuthState } from "@/app/actions/auth";
+import { createAccount, type AuthState } from "@/app/actions/auth";
 
-export default function SignInPage() {
-  const [state, action, pending] = useActionState<AuthState, FormData>(signIn, {});
+export default function CreateAccountPage() {
+  const [state, action, pending] = useActionState<AuthState, FormData>(createAccount, {});
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-haze-100 px-5 py-16">
@@ -17,9 +17,9 @@ export default function SignInPage() {
       </Link>
 
       <div className="w-full max-w-100 rounded-card border border-line-200 bg-paper p-8">
-        <h1 className="type-h2 text-ink-700">Sign in</h1>
+        <h1 className="type-h2 text-ink-700">Create your account</h1>
         <p className="mt-2 type-body-sm text-ink-400">
-          Enter the first name and email on your account.
+          Your name and email speed up every future booking. No password.
         </p>
 
         {state.error && (
@@ -29,17 +29,20 @@ export default function SignInPage() {
         )}
 
         <form action={action} className="mt-6 flex flex-col gap-5">
-          <TextField label="First name" name="firstName" autoComplete="given-name" required />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <TextField label="First name" name="firstName" autoComplete="given-name" required />
+            <TextField label="Last name" name="lastName" autoComplete="family-name" required />
+          </div>
           <TextField label="Email" name="email" type="email" placeholder="you@company.com" autoComplete="email" required />
           <Button type="submit" size="lg" className="w-full" disabled={pending}>
-            {pending ? "Signing in…" : "Sign in"}
+            {pending ? "Creating account…" : "Create account"}
           </Button>
         </form>
 
         <p className="mt-6 type-body-sm text-ink-400">
-          New to Modern Aviation CLT?{" "}
-          <Link href="/create-account" className="font-semibold text-cyan-600 hover:text-cyan-500">
-            Create an account
+          Already have an account?{" "}
+          <Link href="/signin" className="font-semibold text-cyan-600 hover:text-cyan-500">
+            Sign in
           </Link>
         </p>
       </div>

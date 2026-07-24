@@ -1,16 +1,17 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { BookingClose } from "@/components/request/BookingClose";
-import { quotes, findQuote, findAirport } from "@/lib/data";
-
-export function generateStaticParams() {
-  return quotes.map((q) => ({ id: q.id }));
-}
+import { findQuote, findAirport } from "@/lib/data";
+import { getSessionUser } from "@/lib/session";
 
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const quote = findQuote(id);
   if (!quote) notFound();
+
+  // A booking is written against a real account — require sign-in.
+  const user = await getSessionUser();
+  if (!user) redirect("/signin");
 
   const fromCountry = findAirport(quote.from.icao)?.country;
   const toCountry = findAirport(quote.to.icao)?.country;
@@ -28,7 +29,11 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           </p>
         </Container>
       </div>
-      <BookingClose quote={quote} international={international} />
+      <BookingClose
+        quote={quote}
+        international={international}
+        user={{ firstName: user.firstName, lastName: user.lastName, email: user.email }}
+      />
     </>
   );
 }

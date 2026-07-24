@@ -6,18 +6,18 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Plane, Plus, Trash2, Check } from "lucide-react";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { Button } from "@/components/primitives/Button";
-import { SegmentedControl, Stepper, Chip, Switch, RadioCard } from "@/components/primitives/Controls";
+import { SegmentedControl, Stepper, Chip, Switch } from "@/components/primitives/Controls";
 import { TextField, Field, Input } from "@/components/primitives/Field";
 import { AirportCombobox } from "@/components/aviation/AirportCombobox";
 import { RouteDisplay } from "@/components/aviation/RouteDisplay";
 import { WizardProgress } from "@/components/request/WizardProgress";
-import { categories, findAirport, findCustomer, type Airport } from "@/lib/data";
+import { categories, findAirport, type Airport } from "@/lib/data";
+import { lookupUserByEmail } from "@/app/actions/auth";
 import { formatUsd } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 type TripType = "one-way" | "return" | "multi-leg";
 type Flex = "exact" | "2h" | "1d";
-type ContactMethod = "call" | "whatsapp" | "email";
 
 interface Leg {
   from: Airport | null;
@@ -48,7 +48,6 @@ interface State {
   email: string;
   phone: string;
   company: string;
-  contactMethod: ContactMethod;
 }
 
 const initial: State = {
@@ -73,7 +72,6 @@ const initial: State = {
   email: "",
   phone: "",
   company: "",
-  contactMethod: "call",
 };
 
 const STORAGE_KEY = "meridian-request";
@@ -183,15 +181,11 @@ export function RequestWizard() {
     if (step > 0) setStep(step - 1);
   };
 
-  const onEmailBlur = () => {
-    const c = findCustomer(state.email);
-    if (c) {
-      setState((s) => ({
-        ...s,
-        name: s.name || c.name,
-        phone: s.phone || c.phone,
-        company: s.company || c.company || "",
-      }));
+  const onEmailBlur = async () => {
+    // Autofill from a returning user's real account (Postgres via server action).
+    const u = await lookupUserByEmail(state.email);
+    if (u) {
+      setState((s) => ({ ...s, name: s.name || `${u.firstName} ${u.lastName}` }));
     }
   };
 
@@ -530,20 +524,6 @@ function StepContact({
         <TextField label="Phone" placeholder="+1 …" value={state.phone} onChange={(e) => set("phone", e.target.value)} />
         <TextField label="Company" optional value={state.company} onChange={(e) => set("company", e.target.value)} />
       </div>
-
-      <div className="flex flex-col gap-2">
-        <span className="type-label text-ink-600">How should we reach you?</span>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {(["call", "whatsapp", "email"] as ContactMethod[]).map((m) => (
-            <RadioCard
-              key={m}
-              selected={state.contactMethod === m}
-              onSelect={() => set("contactMethod", m)}
-              title={m === "call" ? "Call" : m === "whatsapp" ? "WhatsApp" : "Email"}
-            />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -627,7 +607,6 @@ function StepReview({ state, goto }: { state: State; goto: (n: number) => void }
           <Row label="Name" value={state.name || "—"} />
           <Row label="Email" value={state.email || "—"} />
           <Row label="Phone" value={state.phone || "—"} />
-          <Row label="Reach me by" value={state.contactMethod === "call" ? "Call" : state.contactMethod === "whatsapp" ? "WhatsApp" : "Email"} />
         </dl>
       </section>
     </div>

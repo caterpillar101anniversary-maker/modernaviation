@@ -1,21 +1,23 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Download, FileText, Phone, MapPin } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Badge } from "@/components/primitives/Badge";
 import { Button } from "@/components/primitives/Button";
 import { RouteDisplay } from "@/components/aviation/RouteDisplay";
 import { FlightPathMap } from "@/components/aviation/FlightPathMap";
-import { trips, findTrip } from "@/lib/data";
+import { prisma } from "@/lib/db";
+import { getSessionUser } from "@/lib/session";
+import { bookingToTrip } from "@/lib/mappers";
 import { brand } from "@/config/brand";
-
-export function generateStaticParams() {
-  return trips.map((t) => ({ id: t.id }));
-}
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const trip = findTrip(id);
-  if (!trip) notFound();
+  const user = await getSessionUser();
+  if (!user) redirect("/signin");
+
+  const booking = await prisma.booking.findFirst({ where: { id, userId: user.id } });
+  if (!booking) notFound();
+  const trip = bookingToTrip(booking);
 
   const statusTone = trip.status === "cancelled" ? "stop" : trip.nextAction ? "pending" : "ok";
   const statusText = trip.status === "cancelled" ? "Cancelled" : trip.nextAction ? "Action needed" : "Confirmed";

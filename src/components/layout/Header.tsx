@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/primitives/Button";
 import { Wordmark } from "@/components/layout/Wordmark";
+import { signOut } from "@/app/actions/auth";
 
 const navItems = [
   { label: "Fleet", href: "/fleet" },
@@ -14,7 +15,7 @@ const navItems = [
   { label: "How it works", href: "/#how-it-works" },
 ];
 
-export function Header() {
+export function Header({ user }: { user?: { firstName: string } | null }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
@@ -66,18 +67,31 @@ export function Header() {
 
         {/* Desktop actions */}
         <div className="hidden lg:flex lg:items-center lg:gap-2">
-          <Button asChild variant="ghost">
-            <Link href="/signin">Sign in</Link>
-          </Button>
-          <Button asChild variant="primary">
-            <Link href="/request">Request a flight</Link>
-          </Button>
+          {user ? (
+            <>
+              <Button asChild variant="ghost">
+                <Link href="/account">Hi, {user.firstName}</Link>
+              </Button>
+              <form action={signOut}>
+                <Button type="submit" variant="secondary">Sign out</Button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost">
+                <Link href="/signin">Sign in</Link>
+              </Button>
+              <Button asChild variant="primary">
+                <Link href="/create-account">Create account</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile action — a single Primary (§11.3) */}
         <div className="lg:hidden">
           <Button asChild variant="primary" size="sm">
-            <Link href="/request">Request</Link>
+            <Link href={user ? "/account" : "/create-account"}>{user ? "Account" : "Sign up"}</Link>
           </Button>
         </div>
       </div>
