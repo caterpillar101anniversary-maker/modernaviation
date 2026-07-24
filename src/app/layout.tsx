@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     template: `%s · ${brand.name}`,
   },
   description:
-    "On-demand private jet charter across West Africa and long-haul. Tell us the trip, get a firm quote in twenty minutes, sign and fly.",
+    "On-demand private jet charter from Charlotte Douglas International (KCLT) across the Carolinas and nationwide. Tell us the trip, get a firm quote in twenty minutes, sign and fly.",
 };
 
 export default function RootLayout({

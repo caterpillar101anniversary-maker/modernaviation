@@ -3,7 +3,7 @@ import { Card } from "@/components/primitives/Card";
 import { Badge } from "@/components/primitives/Badge";
 import { AircraftMedia } from "@/components/aviation/AircraftMedia";
 import type { Aircraft } from "@/lib/data";
-import { formatNaira, formatKm, formatVolume } from "@/lib/format";
+import { formatUsd, formatKm, formatVolume } from "@/lib/format";
 
 /**
  * Variant A — Aircraft card (§11.4). 4:3 media, dense 2×2 spec grid, price,
@@ -47,7 +47,7 @@ export function AircraftCard({ aircraft }: { aircraft: Aircraft }) {
         </div>
 
         <div className="border-t border-line-200 pt-4">
-          <p className="type-data-lg text-ink-700">from {formatNaira(aircraft.hourlyNaira)}</p>
+          <p className="type-data-lg text-ink-700">from {formatUsd(aircraft.hourlyUsd)}</p>
           <p className="mt-0.5 type-body-sm text-ink-400">per block hour</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge tone="safety">{aircraft.safety}</Badge>

@@ -5,7 +5,7 @@ import { Badge } from "@/components/primitives/Badge";
 import { Button } from "@/components/primitives/Button";
 import { ExpiryCountdown } from "@/components/aviation/ExpiryCountdown";
 import type { Quote } from "@/lib/data";
-import { formatNairaWithCode } from "@/lib/format";
+import { formatUsdWithCode } from "@/lib/format";
 
 /**
  * Variant C — Quote card (§11.4). No image. Operator + safety, aircraft, a
@@ -26,8 +26,8 @@ export function QuoteCard({ quote }: { quote: Quote }) {
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="type-data-xl text-ink-700">{formatNairaWithCode(quote.totalNaira).split(" ")[0]}</p>
-          <p className="type-data-sm text-ink-400">NGN · all-in</p>
+          <p className="type-data-xl text-ink-700">{formatUsdWithCode(quote.totalUsd).split(" ")[0]}</p>
+          <p className="type-data-sm text-ink-400">USD · all-in</p>
         </div>
       </div>
 

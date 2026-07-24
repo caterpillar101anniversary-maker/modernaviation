@@ -25,7 +25,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Company",
     links: [
-      { label: "About Meridian", href: "/about" },
+      { label: "About Modern Aviation CLT", href: "/about" },
       { label: "Safety & operators", href: "/safety" },
       { label: "Careers", href: "/careers" },
       { label: "Contact dispatch", href: "/contact" },
@@ -44,7 +44,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 export function Footer() {
   return (
-    <footer className="bg-ink-000 pt-20 pb-12">
+    <footer className="bg-ink-000 pt-20 pb-12 print:hidden">
       <Container>
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.4fr_repeat(4,1fr)] md:gap-8">
           <div className="col-span-2 md:col-span-1">

@@ -3,24 +3,18 @@
  * No component may call toLocaleString or format currency inline.
  */
 
-/** ₦18,450,000 — no space before the figure, no decimals above 1,000 (§4.3). */
-export function formatNaira(amount: number): string {
-  return `₦${groupThousands(amount)}`;
-}
-
-/** $12,400 — same rules as naira. */
+/** $12,400 — no space before the figure, no decimals above 1,000 (§4.3). */
 export function formatUsd(amount: number): string {
   return `$${groupThousands(amount)}`;
 }
 
 /** For quote surfaces, always append the currency code (§4.3). */
-export function formatNairaWithCode(amount: number): string {
-  return `${formatNaira(amount)} NGN`;
+export function formatUsdWithCode(amount: number): string {
+  return `${formatUsd(amount)} USD`;
 }
 
 function groupThousands(amount: number): string {
-  const rounded = amount >= 1000 ? Math.round(amount) : amount;
-  return rounded.toLocaleString("en-US", {
+  return amount.toLocaleString("en-US", {
     maximumFractionDigits: amount >= 1000 ? 0 : 2,
   });
 }
@@ -43,7 +37,7 @@ export function formatCountdownLong(totalMinutes: number): string {
   return parts.join(" ");
 }
 
-/** A local clock time with a timezone abbreviation: "06:40 WAT" (§4.3). */
+/** A local clock time with a timezone abbreviation: "06:40 EDT" (§4.3). */
 export function formatClock(time: string, tz: string): string {
   return `${time} ${tz}`;
 }

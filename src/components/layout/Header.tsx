@@ -28,12 +28,12 @@ export function Header() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 bg-paper border-b border-line-200 transition-shadow duration-200 ease-out",
+        "sticky top-0 z-40 bg-paper border-b border-line-200 transition-shadow duration-200 ease-out print:hidden",
         scrolled && "shadow-raised",
       )}
     >
       <div className="mx-auto flex h-14 max-w-320 items-center justify-between px-5 sm:px-6 lg:h-18 lg:px-10">
-        <Link href="/" aria-label="Meridian home" className="rounded-control">
+        <Link href="/" aria-label="Modern Aviation CLT home" className="rounded-control">
           <Wordmark />
         </Link>
 

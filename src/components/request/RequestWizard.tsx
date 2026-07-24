@@ -12,7 +12,7 @@ import { AirportCombobox } from "@/components/aviation/AirportCombobox";
 import { RouteDisplay } from "@/components/aviation/RouteDisplay";
 import { WizardProgress } from "@/components/request/WizardProgress";
 import { categories, findAirport, findCustomer, type Airport } from "@/lib/data";
-import { formatNaira } from "@/lib/format";
+import { formatUsd } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 type TripType = "one-way" | "return" | "multi-leg";
@@ -207,7 +207,7 @@ export function RequestWizard() {
       {/* Minimal top bar — §13.2 */}
       <header className="sticky top-0 z-40 border-b border-line-200 bg-paper">
         <div className="mx-auto flex h-14 max-w-256 items-center justify-between px-5 sm:px-6 lg:h-18 lg:px-10">
-          <Link href="/" aria-label="Meridian home" className="rounded-control">
+          <Link href="/" aria-label="Modern Aviation CLT home" className="rounded-control">
             <Wordmark />
           </Link>
           <Button asChild variant="ghost" size="sm">
@@ -481,7 +481,7 @@ function StepAircraft({
                 <p className="type-h3 text-ink-700">{c.name}</p>
                 <p className="mt-1 type-data-sm text-ink-400">{c.typicalSeats} seats · {c.typicalRangeKm} km</p>
               </div>
-              <p className="type-data text-ink-600">from {formatNaira(c.indicativeHourlyNaira)} <span className="type-body-sm text-ink-400">/ hr</span></p>
+              <p className="type-data text-ink-600">from {formatUsd(c.indicativeHourlyUsd)} <span className="type-body-sm text-ink-400">/ hr</span></p>
             </button>
           );
         })}
@@ -527,7 +527,7 @@ function StepContact({
       />
       <TextField label="Full name" placeholder="First and last name" value={state.name} onChange={(e) => set("name", e.target.value)} />
       <div className="grid gap-5 md:grid-cols-2">
-        <TextField label="Phone" placeholder="+234 …" value={state.phone} onChange={(e) => set("phone", e.target.value)} />
+        <TextField label="Phone" placeholder="+1 …" value={state.phone} onChange={(e) => set("phone", e.target.value)} />
         <TextField label="Company" optional value={state.company} onChange={(e) => set("company", e.target.value)} />
       </div>
 

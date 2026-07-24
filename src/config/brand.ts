@@ -3,16 +3,16 @@
  * it changes here and nowhere else.
  */
 export const brand = {
-  name: "Meridian",
-  wordmark: "MERIDIAN",
-  tagline: "Private jet charter, quoted in twenty minutes.",
+  name: "Modern Aviation CLT",
+  wordmark: "MODERN AVIATION CLT",
+  tagline: "Private jet charter from Charlotte Douglas, quoted in twenty minutes.",
   // A visible phone number is a trust element for this audience (§13.1 §7).
-  phoneDisplay: "+234 1 631 0000",
-  phoneHref: "tel:+2341631000",
-  email: "charter@meridian.aero",
+  phoneDisplay: "+1 704-359-0440",
+  phoneHref: "tel:+17043590440",
+  email: "CLT@modern-aviation.com",
   // Legally load-bearing disclosure — never remove for visual balance (§11.13).
   disclosure:
-    "Meridian arranges charter as an agent and does not operate aircraft. All flights are operated by third-party air carriers holding the appropriate air operator certificate.",
-  certificate: "Registered in Nigeria · RC 7742119",
-  address: "Wing C, Business Aviation Terminal, Murtala Muhammed Airport, Ikeja, Lagos",
+    "Modern Aviation CLT arranges charter as an agent and does not operate aircraft. All flights are operated by third-party air carriers holding an FAA Part 135 air carrier certificate.",
+  certificate: "Based at Charlotte Douglas International Airport (KCLT) · ARINC 129.4",
+  address: "5400 Airport Dr, Charlotte, NC 28208, United States",
 } as const;

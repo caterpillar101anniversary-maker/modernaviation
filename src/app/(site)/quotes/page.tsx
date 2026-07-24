@@ -14,7 +14,7 @@ export default function QuotesPage() {
   const [sort, setSort] = useState<Sort>("price");
 
   const sorted = [...quotes].sort((a, b) => {
-    if (sort === "price") return a.totalNaira - b.totalNaira;
+    if (sort === "price") return a.totalUsd - b.totalUsd;
     if (sort === "age") {
       return (findAircraft(b.aircraftSlug)?.year ?? 0) - (findAircraft(a.aircraftSlug)?.year ?? 0);
     }
@@ -25,7 +25,7 @@ export default function QuotesPage() {
     <>
       <PageMasthead
         eyebrow="Quotes"
-        title="Your quotes for Lagos → Abuja"
+        title="Your quotes for Charlotte → New York"
         description="Firm, all-in prices from vetted operators. Prices hold only until each quote expires."
       />
       <Container className="pb-24">

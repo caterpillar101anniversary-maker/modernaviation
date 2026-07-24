@@ -9,8 +9,7 @@ import { HeroCourseArc } from "@/components/aviation/HeroCourseArc";
 import { HeroRequestBar } from "@/components/aviation/HeroRequestBar";
 import { TrustRow } from "@/components/aviation/TrustRow";
 import { AircraftCard } from "@/components/aviation/AircraftCard";
-import { EmptyLegCard } from "@/components/aviation/EmptyLegCard";
-import { fleet, emptyLegs } from "@/lib/data";
+import { fleet } from "@/lib/data";
 import { brand } from "@/config/brand";
 
 const steps = [
@@ -53,21 +52,21 @@ export default function HomePage() {
         <Container className="relative flex min-h-140 flex-col justify-center py-16 lg:min-h-160 lg:py-20">
           <div className="mx-auto flex max-w-200 flex-col items-center text-center">
             <CourseLineStub dark />
-            <p className="mt-4 type-label text-ink-ondark">On-demand private charter · West Africa</p>
+            <p className="mt-4 type-label text-ink-ondark">On-demand private charter · Charlotte Douglas (KCLT)</p>
             <h1 className="mt-4 type-display-1 text-paper">
               Charter that answers in twenty minutes, not tomorrow.
             </h1>
             <p className="mt-5 max-w-140 type-body-lg text-ink-ondark">
-              Tell us the trip and get a firm, all-in quote from vetted operators — Lagos, Abuja,
-              Accra, Port Harcourt, and long-haul.
+              Tell us the trip and get a firm, all-in quote from vetted operators — out of Charlotte
+              to the Carolinas, the East Coast, and nationwide.
             </p>
           </div>
 
           {/* CL-1 — the hero image is the route, drawn on load. */}
           <div className="mt-12">
             <HeroCourseArc
-              origin={{ iata: "LOS", icao: "DNMM", city: "Lagos" }}
-              destination={{ iata: "LHR", icao: "EGLL", city: "London" }}
+              origin={{ iata: "CLT", icao: "KCLT", city: "Charlotte" }}
+              destination={{ iata: "LAS", icao: "KLAS", city: "Las Vegas" }}
             />
           </div>
 
@@ -109,33 +108,12 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* ── Section 4 · Empty legs ───────────────────────────────── */}
-      <Section
-        eyebrow="Empty legs"
-        title="Repositioning flights, priced well below charter."
-        lead="When an aircraft flies back empty, that leg is discounted. Book the seats, keep the schedule flexible, and pay a fraction of a full charter."
-        className="bg-haze-050"
-      >
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {emptyLegs.map((leg) => (
-            <EmptyLegCard key={leg.id} leg={leg} />
-          ))}
-        </div>
-        <div className="mt-8">
-          <Button asChild variant="secondary">
-            <Link href="/empty-legs">
-              See all empty legs
-              <ArrowRight size={20} strokeWidth={1.5} />
-            </Link>
-          </Button>
-        </div>
-      </Section>
-
-      {/* ── Section 5 · Fleet preview ────────────────────────────── */}
+      {/* ── Section 4 · Fleet preview ────────────────────────────── */}
       <Section
         eyebrow="Fleet"
         title="Aircraft matched to the trip, not the other way round."
         lead="Passenger count and baggage set the category. Every airframe is on an operator's certificate with its registration on record."
+        className="bg-haze-050"
       >
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {fleet.map((aircraft) => (
@@ -152,8 +130,8 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* ── Section 6 · Safety ───────────────────────────────────── */}
-      <Section className="bg-haze-050">
+      {/* ── Section 5 · Safety ───────────────────────────────────── */}
+      <Section>
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
             <CourseLineStub />
@@ -181,7 +159,7 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* ── Section 7 · Closing request band ─────────────────────── */}
+      {/* ── Section 6 · Closing request band ─────────────────────── */}
       <section className="bg-ink-000 py-18 md:py-28">
         <Container>
           <div className="mx-auto flex max-w-200 flex-col items-center text-center">

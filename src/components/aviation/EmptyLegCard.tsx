@@ -5,7 +5,7 @@ import { Badge } from "@/components/primitives/Badge";
 import { AircraftMedia } from "@/components/aviation/AircraftMedia";
 import { RouteDisplay } from "@/components/aviation/RouteDisplay";
 import type { EmptyLeg } from "@/lib/data";
-import { formatNaira } from "@/lib/format";
+import { formatUsd } from "@/lib/format";
 
 /**
  * Variant B — Empty leg card (§11.4). 16:9 media, body leads with a Route
@@ -37,7 +37,7 @@ export function EmptyLegCard({ leg }: { leg: EmptyLeg }) {
             </span>
           </div>
           <p className="mt-3 type-data-lg text-ink-700">
-            from {formatNaira(leg.fromNaira)}
+            from {formatUsd(leg.fromUsd)}
             <span className="ml-1 type-body-sm text-ink-400">· {leg.aircraft}</span>
           </p>
         </div>
