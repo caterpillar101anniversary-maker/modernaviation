@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plane } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { airports, type Airport } from "@/lib/data";
+import type { Airport } from "@/lib/airports";
 import { formatKm } from "@/lib/format";
 
 /**
- * Airport combobox — §12.2. Matches IATA, ICAO, city, and airport name, and
- * includes general-aviation fields, not only IATA commercial airports. Results
- * are grouped (Nearest / Recent / All), each row aligning the code in a fixed
- * column. Full keyboard operability. (A live airport DB replaces the demo list.)
+ * Airport combobox — §12.2. Matches IATA, ICAO, city, state and airport name
+ * across every US airport with a usable hard runway, general-aviation fields
+ * included — not only IATA commercial airports. Each row aligns the code in a
+ * fixed column. Full keyboard operability.
+ *
+ * The database is far too large to ship to the browser, so results come from
+ * `/api/airports` as the customer types. This is a type-only import of
+ * `Airport`, which erases at build time and keeps the dataset server-side.
  */
 export function AirportCombobox({
   label,
@@ -28,16 +32,36 @@ export function AirportCombobox({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const [results, setResults] = useState<Airport[]>([]);
+  const [loading, setLoading] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = `airports-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return airports.slice(0, 8);
-    return airports.filter((a) =>
-      [a.iata, a.icao, a.city, a.name, a.country].some((f) => f.toLowerCase().includes(q)),
-    );
-  }, [query]);
+  // Debounced server search. Each run aborts the one before it, so a fast
+  // typist can't have an earlier response overwrite a later one.
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/airports?q=${encodeURIComponent(query)}`, {
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        setResults(data.airports ?? []);
+      } catch {
+        // An abort is the normal path when typing continues; leave the list be.
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }, query ? 140 : 0);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, open]);
 
   useEffect(() => setActive(0), [query, open]);
 
@@ -103,11 +127,15 @@ export function AirportCombobox({
           className="absolute top-full z-30 mt-2 max-h-80 w-full overflow-auto rounded-card border border-line-200 bg-paper shadow-float"
         >
           <p className="sticky top-0 bg-haze-050 px-4 py-2 type-label text-ink-400">
-            {query ? "All results" : "Nearest"}
+            {query ? "All results" : "Suggested"}
           </p>
           {results.length === 0 && (
             <p className="px-4 py-6 text-center type-body-sm text-ink-400">
-              No airport matches “{query}”. Try an ICAO code or a nearby city.
+              {loading
+                ? "Searching…"
+                : query
+                  ? `No airport matches “${query}”. Try an ICAO code or a nearby city.`
+                  : "Start typing a city, airport or code."}
             </p>
           )}
           {results.map((a, i) => (

@@ -2,17 +2,34 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CircleCheck, Plane, Plus, Trash2, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CircleCheck,
+  Plane,
+  Plus,
+  Trash2,
+  Check,
+} from "lucide-react";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { brand } from "@/config/brand";
 import { Button } from "@/components/primitives/Button";
-import { SegmentedControl, Stepper, Chip, Switch } from "@/components/primitives/Controls";
+import {
+  SegmentedControl,
+  Stepper,
+  Chip,
+  Switch,
+} from "@/components/primitives/Controls";
 import { TextField, Field, Input } from "@/components/primitives/Field";
 import { AirportCombobox } from "@/components/aviation/AirportCombobox";
 import { RouteDisplay } from "@/components/aviation/RouteDisplay";
 import { WizardProgress } from "@/components/request/WizardProgress";
-import { categories, findAirport, type Airport } from "@/lib/data";
-import { createFlightRequest, type RequestLegPayload } from "@/app/actions/request";
+import { categories } from "@/lib/data";
+import type { Airport } from "@/lib/airports";
+import {
+  createFlightRequest,
+  type RequestLegPayload,
+} from "@/app/actions/request";
 import { formatUsd } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -75,7 +92,13 @@ const initial: State = {
 };
 
 const STORAGE_KEY = "meridian-request";
-const OVERSIZED = ["Golf clubs", "Skis", "Instrument case", "Wheelchair", "Pet crate"];
+const OVERSIZED = [
+  "Golf clubs",
+  "Skis",
+  "Instrument case",
+  "Wheelchair",
+  "Pet crate",
+];
 const AMENITIES = ["Enclosed lavatory", "Wi-Fi", "Standing cabin", "Flat bed"];
 
 function fitsText(pax: number): string {
@@ -86,26 +109,42 @@ function fitsText(pax: number): string {
   return "Fits: heavy and ultra-long-range";
 }
 
+/**
+ * Saved state keeps whole airport records rather than codes.
+ *
+ * Looking a code back up would mean the airport database in the browser, and
+ * it is ~670KB. The handful of airports someone picked costs a few hundred
+ * bytes instead. The server re-resolves every code on submit regardless, so a
+ * tampered localStorage can't put an unknown airport on a request.
+ */
 function serialize(s: State) {
-  return JSON.stringify({
-    ...s,
-    from: s.from?.icao ?? null,
-    to: s.to?.icao ?? null,
-    legs: s.legs.map((l) => ({ ...l, from: l.from?.icao ?? null, to: l.to?.icao ?? null })),
-  });
+  return JSON.stringify(s);
 }
+
+/** An airport is only restored if it still looks like one. */
+function isAirport(value: unknown): value is Airport {
+  if (!value || typeof value !== "object") return false;
+  const a = value as Partial<Airport>;
+  return (
+    typeof a.icao === "string" &&
+    typeof a.name === "string" &&
+    typeof a.iata === "string"
+  );
+}
+
 function hydrate(raw: string): State | null {
   try {
     const o = JSON.parse(raw);
+    const airportOrNull = (v: unknown) => (isAirport(v) ? v : null);
     return {
       ...initial,
       ...o,
-      from: o.from ? findAirport(o.from) ?? null : null,
-      to: o.to ? findAirport(o.to) ?? null : null,
-      legs: (o.legs ?? initial.legs).map((l: Leg & { from: string | null; to: string | null }) => ({
+      from: airportOrNull(o.from),
+      to: airportOrNull(o.to),
+      legs: (Array.isArray(o.legs) ? o.legs : initial.legs).map((l: Leg) => ({
         ...l,
-        from: l.from ? findAirport(l.from as unknown as string) ?? null : null,
-        to: l.to ? findAirport(l.to as unknown as string) ?? null : null,
+        from: airportOrNull(l.from),
+        to: airportOrNull(l.to),
       })),
     };
   } catch {
@@ -140,24 +179,30 @@ export function RequestWizard() {
     localStorage.setItem(STORAGE_KEY, serialize(state));
   }, [state]);
 
-  const set = <K extends keyof State>(key: K, value: State[K]) => setState((s) => ({ ...s, [key]: value }));
+  const set = <K extends keyof State>(key: K, value: State[K]) =>
+    setState((s) => ({ ...s, [key]: value }));
   const toggle = (key: "oversized" | "amenities", value: string) =>
     setState((s) => ({
       ...s,
-      [key]: s[key].includes(value) ? s[key].filter((v) => v !== value) : [...s[key], value],
+      [key]: s[key].includes(value)
+        ? s[key].filter((v) => v !== value)
+        : [...s[key], value],
     }));
 
   const validateStep = (): string | null => {
     if (step === 0) {
       if (state.tripType === "multi-leg") {
-        if (state.legs.some((l) => !l.from || !l.to)) return "Add an origin and destination for every leg.";
+        if (state.legs.some((l) => !l.from || !l.to))
+          return "Add an origin and destination for every leg.";
       } else if (!state.from || !state.to) {
         return "Choose both an origin and a destination airport.";
       }
     }
     if (step === 2) {
-      if (!state.name.trim()) return "Enter the name we should put on the quote.";
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(state.email)) return "Enter a valid email so we can send the quote.";
+      if (!state.name.trim())
+        return "Enter the name we should put on the quote.";
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(state.email))
+        return "Enter a valid email so we can send the quote.";
     }
     return null;
   };
@@ -167,7 +212,12 @@ export function RequestWizard() {
     if (state.tripType === "multi-leg") {
       return state.legs
         .filter((l) => l.from && l.to)
-        .map((l) => ({ fromIcao: l.from!.icao, toIcao: l.to!.icao, date: l.date, time: l.time }));
+        .map((l) => ({
+          fromIcao: l.from!.icao,
+          toIcao: l.to!.icao,
+          date: l.date,
+          time: l.time,
+        }));
     }
     const outbound = {
       fromIcao: state.from!.icao,
@@ -248,12 +298,16 @@ export function RequestWizard() {
       {/* Minimal top bar — §13.2 */}
       <header className="sticky top-0 z-40 border-b border-line-200 bg-paper">
         <div className="mx-auto flex h-14 max-w-256 items-center justify-between px-5 sm:px-6 lg:h-18 lg:px-10">
-          <Link href="/" aria-label="Modern Aviation CLT home" className="rounded-control">
+          <Link
+            href="/"
+            aria-label="Modern Aviation CLT home"
+            className="rounded-control"
+          >
             <Wordmark />
           </Link>
-          <Button asChild variant="ghost" size="sm">
+          {/* <Button asChild variant="ghost" size="sm">
             <Link href="/">Save and exit</Link>
-          </Button>
+          </Button> */}
         </div>
       </header>
 
@@ -264,16 +318,26 @@ export function RequestWizard() {
         </div>
       </div>
 
-      <div ref={topRef} className="mx-auto w-full max-w-160 flex-1 px-5 py-9 sm:px-6 lg:px-10">
-        {restored && step === 0 && (
+      <div
+        ref={topRef}
+        className="mx-auto w-full max-w-160 flex-1 px-5 py-9 sm:px-6 lg:px-10"
+      >
+        {/* {restored && step === 0 && (
           <div className="mb-6 flex items-center justify-between gap-4 rounded-card bg-haze-050 px-4 py-3">
-            <p className="type-body-sm text-ink-600">Picked up where you left off.</p>
-            <Button variant="ghost" size="sm" onClick={startOver}>Start over</Button>
+            <p className="type-body-sm text-ink-600">
+              Picked up where you left off.
+            </p>
+            <Button variant="ghost" size="sm" onClick={startOver}>
+              Start over
+            </Button>
           </div>
-        )}
+        )} */}
 
         {error && (
-          <div className="mb-6 rounded-card border border-stop-600 bg-stop-050 px-4 py-3" role="alert">
+          <div
+            className="mb-6 rounded-card border border-stop-600 bg-stop-050 px-4 py-3"
+            role="alert"
+          >
             <p className="type-body-sm text-stop-600">{error}</p>
           </div>
         )}
@@ -295,9 +359,19 @@ export function RequestWizard() {
           ) : (
             <span />
           )}
-          <span className="type-data-sm text-ink-400">Step {step + 1} of 4</span>
-          <Button onClick={next} disabled={submitting} className="max-sm:flex-1">
-            {step === 3 ? (submitting ? "Pricing your trip…" : "Request quotes") : "Continue"}
+          <span className="type-data-sm text-ink-400">
+            Step {step + 1} of 4
+          </span>
+          <Button
+            onClick={next}
+            disabled={submitting}
+            className="max-sm:flex-1"
+          >
+            {step === 3
+              ? submitting
+                ? "Pricing your trip…"
+                : "Request quotes"
+              : "Continue"}
             {!submitting && <ArrowRight size={20} strokeWidth={1.5} />}
           </Button>
         </div>
@@ -317,19 +391,28 @@ function Received({ reference, email }: { reference: string; email: string }) {
     <div className="flex min-h-dvh flex-col bg-haze-100">
       <header className="border-b border-line-200 bg-paper">
         <div className="mx-auto flex h-14 max-w-256 items-center px-5 sm:px-6 lg:h-18 lg:px-10">
-          <Link href="/" aria-label="Modern Aviation CLT home" className="rounded-control">
+          <Link
+            href="/"
+            aria-label="Modern Aviation CLT home"
+            className="rounded-control"
+          >
             <Wordmark />
           </Link>
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-160 flex-1 px-5 py-16 text-center sm:px-6 lg:px-10">
-        <CircleCheck size={48} strokeWidth={1.5} className="mx-auto text-ok-600" aria-hidden />
+        <CircleCheck
+          size={48}
+          strokeWidth={1.5}
+          className="mx-auto text-ok-600"
+          aria-hidden
+        />
         <h1 className="mt-5 type-h1 text-ink-700">Request received</h1>
         <p className="mt-3 type-body text-ink-600">
           A charter agent is pricing your trip now. Your quote goes to{" "}
-          <span className="font-semibold text-ink-700">{email}</span> — most come back within
-          twenty minutes during business hours.
+          <span className="font-semibold text-ink-700">{email}</span> — most
+          come back within twenty minutes during business hours.
         </p>
 
         <div className="mt-8 rounded-card border border-line-200 bg-paper p-6">
@@ -337,7 +420,10 @@ function Received({ reference, email }: { reference: string; email: string }) {
           <p className="mt-2 type-data-xl text-ink-700">{reference}</p>
           <p className="mt-3 type-body-sm text-ink-400">
             Quote it if you call us on{" "}
-            <a href={brand.phoneHref} className="font-semibold text-cyan-600 hover:text-cyan-500">
+            <a
+              href={brand.phoneHref}
+              className="font-semibold text-cyan-600 hover:text-cyan-500"
+            >
               {brand.phoneDisplay}
             </a>
             .
@@ -371,7 +457,9 @@ function StepRoute({
     <div className="flex flex-col gap-10">
       <div>
         <h1 className="type-h1 text-ink-700">Where are you flying?</h1>
-        <p className="mt-2 type-body text-ink-400">No account needed — we only ask what shapes the quote.</p>
+        <p className="mt-2 type-body text-ink-400">
+          No account needed — we only ask what shapes the quote.
+        </p>
       </div>
 
       <SegmentedControl
@@ -387,28 +475,63 @@ function StepRoute({
       {state.tripType !== "multi-leg" ? (
         <div className="flex flex-col gap-5">
           <div className="grid gap-5 md:grid-cols-2">
-            <AirportCombobox label="From" value={state.from} onChange={(a) => set("from", a)} />
-            <AirportCombobox label="To" value={state.to} onChange={(a) => set("to", a)} />
+            <AirportCombobox
+              label="From"
+              value={state.from}
+              onChange={(a) => set("from", a)}
+            />
+            <AirportCombobox
+              label="To"
+              value={state.to}
+              onChange={(a) => set("to", a)}
+            />
           </div>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Departure date" htmlFor="date">
-              <Input id="date" type="date" value={state.date} onChange={(e) => set("date", e.target.value)} />
+              <Input
+                id="date"
+                type="date"
+                value={state.date}
+                onChange={(e) => set("date", e.target.value)}
+              />
             </Field>
-            <Field label="Departure time" htmlFor="time" helper="Departure airport local time.">
-              <Input id="time" type="time" value={state.time} onChange={(e) => set("time", e.target.value)} />
+            <Field
+              label="Departure time"
+              htmlFor="time"
+              helper="Departure airport local time."
+            >
+              <Input
+                id="time"
+                type="time"
+                value={state.time}
+                onChange={(e) => set("time", e.target.value)}
+              />
             </Field>
           </div>
           {state.tripType === "return" && (
             <div className="grid gap-5 md:grid-cols-2">
               <Field label="Return date" htmlFor="rdate">
-                <Input id="rdate" type="date" value={state.returnDate} onChange={(e) => set("returnDate", e.target.value)} />
+                <Input
+                  id="rdate"
+                  type="date"
+                  value={state.returnDate}
+                  onChange={(e) => set("returnDate", e.target.value)}
+                />
               </Field>
               <Field label="Return time" htmlFor="rtime">
-                <Input id="rtime" type="time" value={state.returnTime} onChange={(e) => set("returnTime", e.target.value)} />
+                <Input
+                  id="rtime"
+                  type="time"
+                  value={state.returnTime}
+                  onChange={(e) => set("returnTime", e.target.value)}
+                />
               </Field>
             </div>
           )}
-          <Field label="Time flexibility" helper="Flexible times often reduce the quote.">
+          <Field
+            label="Time flexibility"
+            helper="Flexible times often reduce the quote."
+          >
             <SegmentedControl
               options={[
                 { value: "exact", label: "Exact" },
@@ -426,26 +549,48 @@ function StepRoute({
 
       {/* Passengers */}
       <Field label="Passengers" helper={fitsText(state.passengers)}>
-        <Stepper value={state.passengers} onChange={(v) => set("passengers", v)} min={1} max={19} ariaLabel="Passenger count" />
+        <Stepper
+          value={state.passengers}
+          onChange={(v) => set("passengers", v)}
+          min={1}
+          max={19}
+          ariaLabel="Passenger count"
+        />
       </Field>
 
       {/* Baggage */}
       <div className="flex flex-col gap-4">
         <Field label="Baggage pieces">
-          <Stepper value={state.baggagePieces} onChange={(v) => set("baggagePieces", v)} min={0} max={40} ariaLabel="Baggage pieces" />
+          <Stepper
+            value={state.baggagePieces}
+            onChange={(v) => set("baggagePieces", v)}
+            min={0}
+            max={40}
+            ariaLabel="Baggage pieces"
+          />
         </Field>
         <div className="flex flex-col gap-2">
-          <span className="type-label text-ink-600">Oversized items <span className="font-normal normal-case text-ink-400">(optional)</span></span>
+          <span className="type-label text-ink-600">
+            Oversized items{" "}
+            <span className="font-normal normal-case text-ink-400">
+              (optional)
+            </span>
+          </span>
           <div className="flex flex-wrap gap-2">
             {OVERSIZED.map((item) => (
-              <Chip key={item} selected={state.oversized.includes(item)} onClick={() => toggle("oversized", item)}>
+              <Chip
+                key={item}
+                selected={state.oversized.includes(item)}
+                onClick={() => toggle("oversized", item)}
+              >
                 {item}
               </Chip>
             ))}
           </div>
           {state.oversized.includes("Golf clubs") && (
             <p className="type-body-sm text-warn-600">
-              Golf bags won&apos;t fit a light jet hold. Midsize or larger recommended.
+              Golf bags won&apos;t fit a light jet hold. Midsize or larger
+              recommended.
             </p>
           )}
         </div>
@@ -456,9 +601,16 @@ function StepRoute({
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="type-label text-ink-600">Travelling with a pet?</p>
-            <p className="mt-1 type-body-sm text-ink-400">Some operators restrict pets. We&apos;ll only quote operators that accept them.</p>
+            <p className="mt-1 type-body-sm text-ink-400">
+              Some operators restrict pets. We&apos;ll only quote operators that
+              accept them.
+            </p>
           </div>
-          <Switch checked={state.pets} onChange={(v) => set("pets", v)} ariaLabel="Travelling with a pet" />
+          <Switch
+            checked={state.pets}
+            onChange={(v) => set("pets", v)}
+            ariaLabel="Travelling with a pet"
+          />
         </div>
         {state.pets && (
           <Input
@@ -472,15 +624,26 @@ function StepRoute({
   );
 }
 
-function MultiLeg({ legs, onChange }: { legs: Leg[]; onChange: (l: Leg[]) => void }) {
+function MultiLeg({
+  legs,
+  onChange,
+}: {
+  legs: Leg[];
+  onChange: (l: Leg[]) => void;
+}) {
   const update = (i: number, patch: Partial<Leg>) =>
     onChange(legs.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   return (
     <div className="flex flex-col gap-6">
       {legs.map((leg, i) => (
-        <div key={i} className="rounded-card border border-line-200 bg-paper p-5">
+        <div
+          key={i}
+          className="rounded-card border border-line-200 bg-paper p-5"
+        >
           <div className="mb-4 flex items-center justify-between">
-            <span className="type-label text-ink-400">Leg {String(i + 1).padStart(2, "0")}</span>
+            <span className="type-label text-ink-400">
+              Leg {String(i + 1).padStart(2, "0")}
+            </span>
             {legs.length > 1 && (
               <button
                 type="button"
@@ -492,19 +655,42 @@ function MultiLeg({ legs, onChange }: { legs: Leg[]; onChange: (l: Leg[]) => voi
             )}
           </div>
           <div className="grid gap-5 md:grid-cols-2">
-            <AirportCombobox label="From" value={leg.from} onChange={(a) => update(i, { from: a })} />
-            <AirportCombobox label="To" value={leg.to} onChange={(a) => update(i, { to: a })} />
+            <AirportCombobox
+              label="From"
+              value={leg.from}
+              onChange={(a) => update(i, { from: a })}
+            />
+            <AirportCombobox
+              label="To"
+              value={leg.to}
+              onChange={(a) => update(i, { to: a })}
+            />
             <Field label="Date" htmlFor={`leg-date-${i}`}>
-              <Input id={`leg-date-${i}`} type="date" value={leg.date} onChange={(e) => update(i, { date: e.target.value })} />
+              <Input
+                id={`leg-date-${i}`}
+                type="date"
+                value={leg.date}
+                onChange={(e) => update(i, { date: e.target.value })}
+              />
             </Field>
             <Field label="Time" htmlFor={`leg-time-${i}`}>
-              <Input id={`leg-time-${i}`} type="time" value={leg.time} onChange={(e) => update(i, { time: e.target.value })} />
+              <Input
+                id={`leg-time-${i}`}
+                type="time"
+                value={leg.time}
+                onChange={(e) => update(i, { time: e.target.value })}
+              />
             </Field>
           </div>
         </div>
       ))}
       <div>
-        <Button variant="ghost" onClick={() => onChange([...legs, { from: null, to: null, date: "", time: "" }])}>
+        <Button
+          variant="ghost"
+          onClick={() =>
+            onChange([...legs, { from: null, to: null, date: "", time: "" }])
+          }
+        >
           <Plus size={20} strokeWidth={1.5} /> Add leg
         </Button>
       </div>
@@ -524,7 +710,9 @@ function StepAircraft({
 }) {
   const toggleCategory = (slug: string) => {
     const has = state.categories.includes(slug);
-    const nextCats = has ? state.categories.filter((c) => c !== slug) : [...state.categories, slug];
+    const nextCats = has
+      ? state.categories.filter((c) => c !== slug)
+      : [...state.categories, slug];
     set("categories", nextCats);
     set("noPreference", nextCats.length === 0);
   };
@@ -532,7 +720,10 @@ function StepAircraft({
     <div className="flex flex-col gap-10">
       <div>
         <h1 className="type-h1 text-ink-700">Any aircraft preference?</h1>
-        <p className="mt-2 type-body text-ink-400">Optional. Leave it on “no preference” and we&apos;ll quote the best fit for {state.passengers} passengers.</p>
+        <p className="mt-2 type-body text-ink-400">
+          Optional. Leave it on “no preference” and we&apos;ll quote the best
+          fit for {state.passengers} passengers.
+        </p>
       </div>
 
       <button
@@ -543,13 +734,24 @@ function StepAircraft({
         }}
         className={cn(
           "flex items-center gap-3 rounded-card border bg-paper p-4 text-left transition-colors duration-120",
-          state.noPreference ? "border-cyan-600 bg-cyan-050" : "border-line-200 hover:border-line-300",
+          state.noPreference
+            ? "border-cyan-600 bg-cyan-050"
+            : "border-line-200 hover:border-line-300",
         )}
       >
-        <span className={cn("grid h-5 w-5 place-items-center rounded-pill border-2", state.noPreference ? "border-cyan-600" : "border-line-300")}>
-          {state.noPreference && <Check size={14} strokeWidth={2} className="text-cyan-600" />}
+        <span
+          className={cn(
+            "grid h-5 w-5 place-items-center rounded-pill border-2",
+            state.noPreference ? "border-cyan-600" : "border-line-300",
+          )}
+        >
+          {state.noPreference && (
+            <Check size={14} strokeWidth={2} className="text-cyan-600" />
+          )}
         </span>
-        <span className="type-h3 text-ink-700">No preference — show me everything</span>
+        <span className="type-h3 text-ink-700">
+          No preference — show me everything
+        </span>
       </button>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -562,28 +764,57 @@ function StepAircraft({
               onClick={() => toggleCategory(c.slug)}
               className={cn(
                 "flex flex-col gap-3 rounded-card border bg-paper p-5 text-left transition-colors duration-120",
-                selected ? "border-cyan-600 bg-cyan-050" : "border-line-200 hover:border-line-300",
+                selected
+                  ? "border-cyan-600 bg-cyan-050"
+                  : "border-line-200 hover:border-line-300",
               )}
             >
               <div className="flex items-center justify-between">
-                <Plane size={24} strokeWidth={1.5} className="-rotate-45 text-ink-400" aria-hidden />
-                {selected && <Check size={20} strokeWidth={1.5} className="text-cyan-600" />}
+                <Plane
+                  size={24}
+                  strokeWidth={1.5}
+                  className="-rotate-45 text-ink-400"
+                  aria-hidden
+                />
+                {selected && (
+                  <Check
+                    size={20}
+                    strokeWidth={1.5}
+                    className="text-cyan-600"
+                  />
+                )}
               </div>
               <div>
                 <p className="type-h3 text-ink-700">{c.name}</p>
-                <p className="mt-1 type-data-sm text-ink-400">{c.typicalSeats} seats · {c.typicalRangeKm} km</p>
+                <p className="mt-1 type-data-sm text-ink-400">
+                  {c.typicalSeats} seats · {c.typicalRangeKm} km
+                </p>
               </div>
-              <p className="type-data text-ink-600">from {formatUsd(c.indicativeHourlyUsd)} <span className="type-body-sm text-ink-400">/ hr</span></p>
+              <p className="type-data text-ink-600">
+                from {formatUsd(c.indicativeHourlyUsd)}{" "}
+                <span className="type-body-sm text-ink-400">/ hr</span>
+              </p>
             </button>
           );
         })}
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="type-label text-ink-600">Must-have amenities <span className="font-normal normal-case text-ink-400">(optional)</span></span>
+        <span className="type-label text-ink-600">
+          Must-have amenities{" "}
+          <span className="font-normal normal-case text-ink-400">
+            (optional)
+          </span>
+        </span>
         <div className="flex flex-wrap gap-2">
           {AMENITIES.map((a) => (
-            <Chip key={a} selected={state.amenities.includes(a)} onClick={() => toggle("amenities", a)}>{a}</Chip>
+            <Chip
+              key={a}
+              selected={state.amenities.includes(a)}
+              onClick={() => toggle("amenities", a)}
+            >
+              {a}
+            </Chip>
           ))}
         </div>
       </div>
@@ -603,7 +834,9 @@ function StepContact({
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="type-h1 text-ink-700">Where do we send the quote?</h1>
-        <p className="mt-2 type-body text-ink-400">We don&apos;t collect passport details until a price exists.</p>
+        <p className="mt-2 type-body text-ink-400">
+          We don&apos;t collect passport details until a price exists.
+        </p>
       </div>
 
       <TextField
@@ -614,24 +847,56 @@ function StepContact({
         onChange={(e) => set("email", e.target.value)}
         helper="This is where your quote goes — an agent replies here directly."
       />
-      <TextField label="Full name" placeholder="First and last name" value={state.name} onChange={(e) => set("name", e.target.value)} />
+      <TextField
+        label="Full name"
+        placeholder="First and last name"
+        value={state.name}
+        onChange={(e) => set("name", e.target.value)}
+      />
       <div className="grid gap-5 md:grid-cols-2">
-        <TextField label="Phone" placeholder="+1 …" value={state.phone} onChange={(e) => set("phone", e.target.value)} />
-        <TextField label="Company" optional value={state.company} onChange={(e) => set("company", e.target.value)} />
+        <TextField
+          label="Phone"
+          placeholder="+1 …"
+          value={state.phone}
+          onChange={(e) => set("phone", e.target.value)}
+        />
+        <TextField
+          label="Company"
+          optional
+          value={state.company}
+          onChange={(e) => set("company", e.target.value)}
+        />
       </div>
     </div>
   );
 }
 
 /* ── Step 4 · Review ── */
-function StepReview({ state, goto }: { state: State; goto: (n: number) => void }) {
+function StepReview({
+  state,
+  goto,
+}: {
+  state: State;
+  goto: (n: number) => void;
+}) {
   const legs =
     state.tripType === "multi-leg"
       ? state.legs
-      : [{ from: state.from, to: state.to, date: state.date, time: state.time }];
+      : [
+          {
+            from: state.from,
+            to: state.to,
+            date: state.date,
+            time: state.time,
+          },
+        ];
 
   const EditLink = ({ to }: { to: number }) => (
-    <button type="button" onClick={() => goto(to)} className="rounded-control type-body-sm font-semibold text-cyan-600 hover:text-cyan-500">
+    <button
+      type="button"
+      onClick={() => goto(to)}
+      className="rounded-control type-body-sm font-semibold text-cyan-600 hover:text-cyan-500"
+    >
       Edit
     </button>
   );
@@ -647,7 +912,10 @@ function StepReview({ state, goto }: { state: State; goto: (n: number) => void }
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="type-h1 text-ink-700">Review your request</h1>
-        <p className="mt-2 type-body text-ink-400">We&apos;ll contact vetted operators and return firm quotes — most within twenty minutes.</p>
+        <p className="mt-2 type-body text-ink-400">
+          We&apos;ll contact vetted operators and return firm quotes — most
+          within twenty minutes.
+        </p>
       </div>
 
       <section className="rounded-card border border-line-200 bg-paper p-5">
@@ -660,21 +928,57 @@ function StepReview({ state, goto }: { state: State; goto: (n: number) => void }
             leg.from && leg.to ? (
               <RouteDisplay
                 key={i}
-                from={{ iata: leg.from.iata !== "—" ? leg.from.iata : leg.from.icao, icao: leg.from.icao, name: leg.from.name }}
-                to={{ iata: leg.to.iata !== "—" ? leg.to.iata : leg.to.icao, icao: leg.to.icao, name: leg.to.name }}
+                from={{
+                  iata: leg.from.iata !== "—" ? leg.from.iata : leg.from.icao,
+                  icao: leg.from.icao,
+                  name: leg.from.name,
+                }}
+                to={{
+                  iata: leg.to.iata !== "—" ? leg.to.iata : leg.to.icao,
+                  icao: leg.to.icao,
+                  name: leg.to.name,
+                }}
                 durationMinutes={75}
               />
             ) : (
-              <p key={i} className="type-body-sm text-ink-400">Leg {i + 1} incomplete</p>
+              <p key={i} className="type-body-sm text-ink-400">
+                Leg {i + 1} incomplete
+              </p>
             ),
           )}
         </div>
         <dl className="mt-4">
-          <Row label="Trip type" value={state.tripType === "one-way" ? "One way" : state.tripType === "return" ? "Return" : "Multi-leg"} />
-          <Row label="Departure" value={state.date ? `${state.date} ${state.time}`.trim() : "To confirm"} />
-          <Row label="Flexibility" value={state.flexibility === "exact" ? "Exact" : state.flexibility === "2h" ? "±2 hours" : "±1 day"} />
+          <Row
+            label="Trip type"
+            value={
+              state.tripType === "one-way"
+                ? "One way"
+                : state.tripType === "return"
+                  ? "Return"
+                  : "Multi-leg"
+            }
+          />
+          <Row
+            label="Departure"
+            value={
+              state.date ? `${state.date} ${state.time}`.trim() : "To confirm"
+            }
+          />
+          <Row
+            label="Flexibility"
+            value={
+              state.flexibility === "exact"
+                ? "Exact"
+                : state.flexibility === "2h"
+                  ? "±2 hours"
+                  : "±1 day"
+            }
+          />
           <Row label="Passengers" value={String(state.passengers)} />
-          <Row label="Baggage" value={`${state.baggagePieces} pieces${state.oversized.length ? " · " + state.oversized.join(", ") : ""}`} />
+          <Row
+            label="Baggage"
+            value={`${state.baggagePieces} pieces${state.oversized.length ? " · " + state.oversized.join(", ") : ""}`}
+          />
           {state.pets && <Row label="Pet" value={state.petInfo || "Yes"} />}
         </dl>
       </section>
@@ -687,9 +991,22 @@ function StepReview({ state, goto }: { state: State; goto: (n: number) => void }
         <dl>
           <Row
             label="Category"
-            value={state.noPreference ? "No preference" : state.categories.map((c) => categories.find((x) => x.slug === c)?.name).join(", ")}
+            value={
+              state.noPreference
+                ? "No preference"
+                : state.categories
+                    .map((c) => categories.find((x) => x.slug === c)?.name)
+                    .join(", ")
+            }
           />
-          <Row label="Amenities" value={state.amenities.length ? state.amenities.join(", ") : "None specified"} />
+          <Row
+            label="Amenities"
+            value={
+              state.amenities.length
+                ? state.amenities.join(", ")
+                : "None specified"
+            }
+          />
         </dl>
       </section>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/primitives/Button";
 import { Wordmark } from "@/components/layout/Wordmark";
@@ -15,9 +16,17 @@ const navItems = [
   { label: "How it works", href: "/#how-it-works" },
 ];
 
+const MENU_ID = "primary-menu";
+
+/** In-page anchors never count as the active section. */
+function isActive(href: string, pathname: string) {
+  return href.startsWith("/") && !href.includes("#") && pathname.startsWith(href);
+}
+
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -25,6 +34,19 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Navigating closes the menu — the same route can re-render without unmounting.
+  useEffect(() => setMenuOpen(false), [pathname]);
+
+  // An open menu shouldn't scroll the page behind it.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [menuOpen]);
 
   return (
     <header
@@ -41,10 +63,7 @@ export function Header() {
         {/* Desktop navigation (≥1024px) */}
         <nav className="hidden lg:flex lg:items-center lg:gap-8" aria-label="Primary">
           {navItems.map((item) => {
-            const active =
-              item.href.startsWith("/") &&
-              !item.href.includes("#") &&
-              pathname.startsWith(item.href);
+            const active = isActive(item.href, pathname);
             return (
               <Link
                 key={item.label}
@@ -75,13 +94,68 @@ export function Header() {
           </Button>
         </div>
 
-        {/* Mobile action — a single Primary (§11.3) */}
-        <div className="lg:hidden">
-          <Button asChild variant="primary" size="sm">
-            <Link href="/request">Request a quote</Link>
-          </Button>
-        </div>
+        {/* Mobile — wordmark and a hamburger, nothing else. */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-expanded={menuOpen}
+          aria-controls={MENU_ID}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          className="-mr-2 grid h-12 w-12 place-items-center rounded-control text-ink-700 transition-colors duration-120 hover:bg-haze-050 lg:hidden"
+        >
+          {menuOpen ? (
+            <X size={24} strokeWidth={1.5} aria-hidden />
+          ) : (
+            <Menu size={24} strokeWidth={1.5} aria-hidden />
+          )}
+        </button>
       </div>
+
+      {/* Collapsed desktop navigation — the same destinations, in the same
+          order, plus the actions that sit beside the desktop nav. */}
+      {menuOpen && (
+        <nav
+          id={MENU_ID}
+          aria-label="Primary"
+          className="border-t border-line-200 bg-paper lg:hidden"
+        >
+          <ul className="flex flex-col px-5 py-2 sm:px-6">
+            {navItems.map((item) => {
+              const active = isActive(item.href, pathname);
+              return (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex min-h-12 items-center border-b border-line-200 type-body transition-colors duration-120",
+                      active ? "text-ink-700" : "text-ink-600",
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden
+                        className="mr-3 block h-4 w-px"
+                        style={{ background: "var(--color-course-500)" }}
+                      />
+                    )}
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="flex flex-col gap-3 px-5 pb-5 pt-3 sm:px-6">
+            <Button asChild variant="primary" size="lg">
+              <Link href="/request">Request a quote</Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <a href={brand.phoneHref}>{brand.phoneDisplay}</a>
+            </Button>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

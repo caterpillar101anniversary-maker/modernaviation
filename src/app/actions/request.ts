@@ -2,7 +2,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { findAirport } from "@/lib/data";
+import { findAirport } from "@/lib/airports";
 
 /**
  * What the wizard sends. Airports travel as ICAO codes and are resolved
