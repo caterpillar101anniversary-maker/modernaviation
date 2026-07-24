@@ -42,6 +42,16 @@ export function formatClock(time: string, tz: string): string {
   return `${time} ${tz}`;
 }
 
+/**
+ * A quote's customer-facing reference: "Q-7K2P0X".
+ *
+ * Row ids are cuids — fine as keys, unreadable over the phone — so surfaces
+ * quote a short, stable tail of the id instead.
+ */
+export function formatQuoteRef(id: string): string {
+  return `Q-${id.slice(-6).toUpperCase()}`;
+}
+
 /** Distance in kilometres with a thousands separator: "3,400 km". */
 export function formatKm(km: number): string {
   return `${km.toLocaleString("en-US")} km`;

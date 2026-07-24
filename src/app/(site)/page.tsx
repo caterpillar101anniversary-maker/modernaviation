@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Phone } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Section } from "@/components/layout/Section";
@@ -26,7 +27,7 @@ const steps = [
   {
     n: "03",
     title: "Confirm and fly",
-    body: "Accept the quote, sign the charter agreement, pay by transfer, and you're on the manifest.",
+    body: "Reply to your agent to accept. They handle the charter agreement, payment and manifest with you directly.",
   },
 ];
 
@@ -43,22 +44,40 @@ export default function HomePage() {
     <>
       {/* ── Section 1 · Hero ─────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-ink-000">
-        {/* The single permitted gradient — atmospheric depth only (§3.2). */}
+        {/* Ramp photography in flat daylight — the one treatment §8.2 permits
+            for an exterior. It sits well behind the type: the scrim below
+            carries it dark enough for the display text to stay legible. */}
+        <Image
+          src="/hero-ramp.jpg"
+          alt="Business jet parked on the ramp with its airstair down, three-quarter view in daylight"
+          fill
+          priority
+          sizes="100vw"
+          className="pointer-events-none select-none object-cover"
+        />
+        {/* The single permitted gradient — atmospheric depth only (§3.2) —
+            doubling as the scrim that holds contrast over the photograph. */}
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ background: "linear-gradient(180deg, var(--color-ink-000) 0%, #0a1220 100%)" }}
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(6,12,22,0.82) 0%, rgba(10,18,32,0.90) 55%, #0a1220 100%)",
+          }}
           aria-hidden
         />
         <Container className="relative flex min-h-140 flex-col justify-center py-16 lg:min-h-160 lg:py-20">
           <div className="mx-auto flex max-w-200 flex-col items-center text-center">
             <CourseLineStub dark />
-            <p className="mt-4 type-label text-ink-ondark">On-demand private charter · Charlotte Douglas (KCLT)</p>
+            <p className="mt-4 type-label text-ink-ondark">
+              On-demand private charter · Charlotte Douglas (KCLT)
+            </p>
             <h1 className="mt-4 type-display-1 text-paper">
               Charter that answers in twenty minutes, not tomorrow.
             </h1>
             <p className="mt-5 max-w-140 type-body-lg text-ink-ondark">
-              Tell us the trip and get a firm, all-in quote from vetted operators — out of Charlotte
-              to the Carolinas, the East Coast, and nationwide.
+              Tell us the trip and get a firm, all-in quote from vetted
+              operators — out of Charlotte to the Carolinas, the East Coast, and
+              nationwide.
             </p>
           </div>
 
@@ -101,7 +120,9 @@ export default function HomePage() {
                   {step.n}
                 </span>
                 <h3 className="mt-5 type-h3 text-ink-700">{step.title}</h3>
-                <p className="mt-2 max-w-80 type-body text-ink-600">{step.body}</p>
+                <p className="mt-2 max-w-80 type-body text-ink-600">
+                  {step.body}
+                </p>
               </li>
             ))}
           </ol>
@@ -109,7 +130,7 @@ export default function HomePage() {
       </Section>
 
       {/* ── Section 4 · Fleet preview ────────────────────────────── */}
-      <Section
+      {/* <Section
         eyebrow="Fleet"
         title="Aircraft matched to the trip, not the other way round."
         lead="Passenger count and baggage set the category. Every airframe is on an operator's certificate with its registration on record."
@@ -128,7 +149,7 @@ export default function HomePage() {
             </Link>
           </Button>
         </div>
-      </Section>
+      </Section> */}
 
       {/* ── Section 5 · Safety ───────────────────────────────────── */}
       <Section>
@@ -140,9 +161,10 @@ export default function HomePage() {
               Every operator is vetted before a single seat is offered.
             </h2>
             <p className="mt-4 max-w-140 type-body-lg text-ink-600">
-              We only quote operators holding a current air operator certificate and an independent
-              safety audit. The checks below run on every airframe — and we state, on every quote,
-              who is operating your flight.
+              We only quote operators holding a current air operator certificate
+              and an independent safety audit. The checks below run on every
+              airframe — and we state, on every quote, who is operating your
+              flight.
             </p>
             <div className="mt-6">
               <Button asChild variant="ghost" className="px-0">
@@ -154,7 +176,10 @@ export default function HomePage() {
             </div>
           </div>
           <div className="lg:pt-2">
-            <SpecTable header={{ label: "Vetting check", value: "Requirement" }} rows={safetyChecks} />
+            <SpecTable
+              header={{ label: "Vetting check", value: "Requirement" }}
+              rows={safetyChecks}
+            />
           </div>
         </div>
       </Section>
@@ -168,7 +193,8 @@ export default function HomePage() {
               Tell us the trip. We'll quote it in twenty minutes.
             </h2>
             <p className="mt-4 max-w-140 type-body-lg text-ink-ondark">
-              Start the request now, or call dispatch — someone answers around the clock, every day.
+              Start the request now, or call dispatch — someone answers around
+              the clock, every day.
             </p>
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
               <Button asChild variant="onDark" size="lg">

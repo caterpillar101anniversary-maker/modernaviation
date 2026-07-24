@@ -9,7 +9,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Request a flight", href: "/request" },
       { label: "Empty legs", href: "/empty-legs" },
-      { label: "Quotes", href: "/quotes" },
       { label: "Jet card", href: "/jet-card" },
     ],
   },

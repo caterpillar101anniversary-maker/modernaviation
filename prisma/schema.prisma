@@ -1,5 +1,4 @@
 // Modern Aviation CLT — data model.
-// Real user data is stored here; see src/lib/db.ts for the client.
 
 generator client {
   provider = "prisma-client-js"
@@ -10,54 +9,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String    @id @default(cuid())
-  firstName String
-  lastName  String
-  email     String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
+/// A trip request submitted from the wizard.
+///
+/// This is the whole customer-facing flow: someone describes the trip, we
+/// store it, and an agent replies by email with a price. There is no online
+/// quote, booking or account, so everything an agent needs to make that reply
+/// has to be captured here.
+model FlightRequest {
+  id        String @id @default(cuid())
+  /// Short human reference an agent can quote over the phone or in email.
+  reference String @unique
+  status    String @default("new") // new | quoted | closed
 
-  @@map("users")
-}
+  tripType    String // one-way | return | multi-leg
+  /// [{ fromIata, fromIcao, fromName, toIata, toIcao, toName, date, time }]
+  legs        Json
+  flexibility String // exact | 2h | 1d
 
-model Booking {
-  id            String   @id @default(cuid())
-  reference     String   @unique
-  status        String   @default("confirmed") // confirmed | pending | cancelled
+  passengers    Int
+  baggagePieces Int
+  oversized     Json // string[] — golf clubs, skis, instrument cases
+  pets          Boolean @default(false)
+  petInfo       String?
 
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id])
-  email  String
+  /// Category slugs the customer picked; empty when they had no preference.
+  categories Json
+  /// Amenity labels treated as dealbreakers.
+  amenities  Json
 
-  // Denormalised flight details — quotes are demo/not in the DB yet, so the
-  // itinerary renders entirely from what we store here.
-  fromIata String
-  fromIcao String
-  fromName String
-  fromTime String?
-  toIata   String
-  toIcao   String
-  toName   String
-  toTime   String?
-  tz       String?
-  dateLabel     String
-  durationMin   Int
-
-  aircraftModel String
-  registration  String
-  operator      String
-
-  totalUsd      Int
-  paymentMethod String
-  fboFrom       String?
-  fboTo         String?
-
-  passengers Json // [{ name, nationality, weightKg }]
+  name    String
+  email   String
+  phone   String?
+  company String?
 
   createdAt DateTime @default(now())
 
-  @@index([userId])
-  @@map("bookings")
+  @@index([email])
+  @@index([createdAt])
+  @@map("flight_requests")
 }

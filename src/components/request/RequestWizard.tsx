@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Plane, Plus, Trash2, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleCheck, Plane, Plus, Trash2, Check } from "lucide-react";
 import { Wordmark } from "@/components/layout/Wordmark";
+import { brand } from "@/config/brand";
 import { Button } from "@/components/primitives/Button";
 import { SegmentedControl, Stepper, Chip, Switch } from "@/components/primitives/Controls";
 import { TextField, Field, Input } from "@/components/primitives/Field";
@@ -12,7 +12,7 @@ import { AirportCombobox } from "@/components/aviation/AirportCombobox";
 import { RouteDisplay } from "@/components/aviation/RouteDisplay";
 import { WizardProgress } from "@/components/request/WizardProgress";
 import { categories, findAirport, type Airport } from "@/lib/data";
-import { lookupUserByEmail } from "@/app/actions/auth";
+import { createFlightRequest, type RequestLegPayload } from "@/app/actions/request";
 import { formatUsd } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -114,11 +114,13 @@ function hydrate(raw: string): State | null {
 }
 
 export function RequestWizard() {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [state, setState] = useState<State>(initial);
   const [restored, setRestored] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  /** Set once the request is filed — the wizard is replaced by the receipt. */
+  const [reference, setReference] = useState<string | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
   // Restore on mount.
@@ -160,7 +162,32 @@ export function RequestWizard() {
     return null;
   };
 
-  const next = () => {
+  /** The trip as a list of legs — one-way is one, return is two. */
+  const buildLegs = (): RequestLegPayload[] => {
+    if (state.tripType === "multi-leg") {
+      return state.legs
+        .filter((l) => l.from && l.to)
+        .map((l) => ({ fromIcao: l.from!.icao, toIcao: l.to!.icao, date: l.date, time: l.time }));
+    }
+    const outbound = {
+      fromIcao: state.from!.icao,
+      toIcao: state.to!.icao,
+      date: state.date,
+      time: state.time,
+    };
+    if (state.tripType !== "return") return [outbound];
+    return [
+      outbound,
+      {
+        fromIcao: state.to!.icao,
+        toIcao: state.from!.icao,
+        date: state.returnDate,
+        time: state.returnTime,
+      },
+    ];
+  };
+
+  const next = async () => {
     const err = validateStep();
     if (err) {
       setError(err);
@@ -171,22 +198,40 @@ export function RequestWizard() {
     if (step < 3) {
       setStep(step + 1);
       topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-      router.push("/quotes");
+      return;
     }
+
+    // Final step — hand the trip to an agent, who replies by email. This is
+    // the end of the flow; there is nothing to price or pay for on the site.
+    setSubmitting(true);
+    const result = await createFlightRequest({
+      tripType: state.tripType,
+      legs: buildLegs(),
+      flexibility: state.flexibility,
+      passengers: state.passengers,
+      baggagePieces: state.baggagePieces,
+      oversized: state.oversized,
+      pets: state.pets,
+      petInfo: state.petInfo,
+      categories: state.noPreference ? [] : state.categories,
+      amenities: state.amenities,
+      name: state.name,
+      email: state.email,
+      phone: state.phone,
+      company: state.company,
+    });
+    if (!result.ok) {
+      setSubmitting(false);
+      setError(result.error);
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    setReference(result.reference);
   };
   const back = () => {
     setError(null);
     if (step > 0) setStep(step - 1);
-  };
-
-  const onEmailBlur = async () => {
-    // Autofill from a returning user's real account (Postgres via server action).
-    const u = await lookupUserByEmail(state.email);
-    if (u) {
-      setState((s) => ({ ...s, name: s.name || `${u.firstName} ${u.lastName}` }));
-    }
   };
 
   const startOver = () => {
@@ -195,6 +240,8 @@ export function RequestWizard() {
     setStep(0);
     setRestored(false);
   };
+
+  if (reference) return <Received reference={reference} email={state.email} />;
 
   return (
     <div className="flex min-h-dvh flex-col bg-haze-100">
@@ -233,7 +280,7 @@ export function RequestWizard() {
 
         {step === 0 && <StepRoute state={state} set={set} toggle={toggle} />}
         {step === 1 && <StepAircraft state={state} set={set} toggle={toggle} />}
-        {step === 2 && <StepContact state={state} set={set} onEmailBlur={onEmailBlur} />}
+        {step === 2 && <StepContact state={state} set={set} />}
         {step === 3 && <StepReview state={state} goto={setStep} />}
       </div>
 
@@ -241,7 +288,7 @@ export function RequestWizard() {
       <div className="sticky bottom-0 z-40 border-t border-line-200 bg-paper shadow-float">
         <div className="mx-auto flex h-18 max-w-160 items-center justify-between px-5 sm:px-6 lg:px-10">
           {step > 0 ? (
-            <Button variant="ghost" onClick={back}>
+            <Button variant="ghost" onClick={back} disabled={submitting}>
               <ArrowLeft size={20} strokeWidth={1.5} />
               <span className="hidden sm:inline">Back</span>
             </Button>
@@ -249,9 +296,60 @@ export function RequestWizard() {
             <span />
           )}
           <span className="type-data-sm text-ink-400">Step {step + 1} of 4</span>
-          <Button onClick={next} className="max-sm:flex-1">
-            {step === 3 ? "Request quotes" : "Continue"}
-            <ArrowRight size={20} strokeWidth={1.5} />
+          <Button onClick={next} disabled={submitting} className="max-sm:flex-1">
+            {step === 3 ? (submitting ? "Pricing your trip…" : "Request quotes") : "Continue"}
+            {!submitting && <ArrowRight size={20} strokeWidth={1.5} />}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Received ── */
+/**
+ * The end of the flow. No price, no payment, no account — an agent reads the
+ * request and replies by email, so the only things worth stating here are the
+ * reference and exactly where the reply is going.
+ */
+function Received({ reference, email }: { reference: string; email: string }) {
+  return (
+    <div className="flex min-h-dvh flex-col bg-haze-100">
+      <header className="border-b border-line-200 bg-paper">
+        <div className="mx-auto flex h-14 max-w-256 items-center px-5 sm:px-6 lg:h-18 lg:px-10">
+          <Link href="/" aria-label="Modern Aviation CLT home" className="rounded-control">
+            <Wordmark />
+          </Link>
+        </div>
+      </header>
+
+      <div className="mx-auto w-full max-w-160 flex-1 px-5 py-16 text-center sm:px-6 lg:px-10">
+        <CircleCheck size={48} strokeWidth={1.5} className="mx-auto text-ok-600" aria-hidden />
+        <h1 className="mt-5 type-h1 text-ink-700">Request received</h1>
+        <p className="mt-3 type-body text-ink-600">
+          A charter agent is pricing your trip now. Your quote goes to{" "}
+          <span className="font-semibold text-ink-700">{email}</span> — most come back within
+          twenty minutes during business hours.
+        </p>
+
+        <div className="mt-8 rounded-card border border-line-200 bg-paper p-6">
+          <p className="type-label text-ink-400">Your reference</p>
+          <p className="mt-2 type-data-xl text-ink-700">{reference}</p>
+          <p className="mt-3 type-body-sm text-ink-400">
+            Quote it if you call us on{" "}
+            <a href={brand.phoneHref} className="font-semibold text-cyan-600 hover:text-cyan-500">
+              {brand.phoneDisplay}
+            </a>
+            .
+          </p>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Button asChild>
+            <Link href="/">Back to home</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href="/fleet">Browse the fleet</Link>
           </Button>
         </div>
       </div>
@@ -497,11 +595,9 @@ function StepAircraft({
 function StepContact({
   state,
   set,
-  onEmailBlur,
 }: {
   state: State;
   set: <K extends keyof State>(k: K, v: State[K]) => void;
-  onEmailBlur: () => void;
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -516,8 +612,7 @@ function StepContact({
         placeholder="you@company.com"
         value={state.email}
         onChange={(e) => set("email", e.target.value)}
-        onBlur={onEmailBlur}
-        helper="Enter your email first — returning clients have the rest filled in automatically."
+        helper="This is where your quote goes — an agent replies here directly."
       />
       <TextField label="Full name" placeholder="First and last name" value={state.name} onChange={(e) => set("name", e.target.value)} />
       <div className="grid gap-5 md:grid-cols-2">

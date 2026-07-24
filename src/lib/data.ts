@@ -20,28 +20,33 @@ export interface Airport {
   country: string;
   kind: AirportKind;
   runwayM: number;
+  /** Field reference point, decimal degrees — drives great-circle distance. */
+  lat: number;
+  lng: number;
+  /** IANA zone. Stored rather than an abbreviation so DST resolves correctly. */
+  tz: string;
 }
 
 export const airports: Airport[] = [
-  { iata: "CLT", icao: "KCLT", name: "Charlotte Douglas Intl", city: "Charlotte, NC", country: "United States", kind: "international", runwayM: 3048 },
-  { iata: "JQF", icao: "KJQF", name: "Concord–Padgett Regional", city: "Concord, NC", country: "United States", kind: "ga", runwayM: 2286 },
-  { iata: "EQY", icao: "KEQY", name: "Charlotte–Monroe Executive", city: "Monroe, NC", country: "United States", kind: "ga", runwayM: 1524 },
-  { iata: "TEB", icao: "KTEB", name: "Teterboro", city: "New York, NJ", country: "United States", kind: "ga", runwayM: 2131 },
-  { iata: "JFK", icao: "KJFK", name: "John F. Kennedy Intl", city: "New York, NY", country: "United States", kind: "international", runwayM: 4423 },
-  { iata: "BED", icao: "KBED", name: "Hanscom Field", city: "Boston, MA", country: "United States", kind: "ga", runwayM: 2130 },
-  { iata: "IAD", icao: "KIAD", name: "Washington Dulles Intl", city: "Washington, DC", country: "United States", kind: "international", runwayM: 3506 },
-  { iata: "PBI", icao: "KPBI", name: "Palm Beach Intl", city: "West Palm Beach, FL", country: "United States", kind: "international", runwayM: 3213 },
-  { iata: "OPF", icao: "KOPF", name: "Miami–Opa-locka Executive", city: "Miami, FL", country: "United States", kind: "ga", runwayM: 2621 },
-  { iata: "MIA", icao: "KMIA", name: "Miami Intl", city: "Miami, FL", country: "United States", kind: "international", runwayM: 4000 },
-  { iata: "APF", icao: "KAPF", name: "Naples Municipal", city: "Naples, FL", country: "United States", kind: "ga", runwayM: 1602 },
-  { iata: "HHH", icao: "KHXD", name: "Hilton Head", city: "Hilton Head Island, SC", country: "United States", kind: "ga", runwayM: 1460 },
-  { iata: "ATL", icao: "KATL", name: "Hartsfield–Jackson", city: "Atlanta, GA", country: "United States", kind: "international", runwayM: 3776 },
-  { iata: "FTY", icao: "KFTY", name: "Fulton County Executive", city: "Atlanta, GA", country: "United States", kind: "ga", runwayM: 1817 },
-  { iata: "DAL", icao: "KDAL", name: "Dallas Love Field", city: "Dallas, TX", country: "United States", kind: "domestic", runwayM: 2530 },
-  { iata: "ASE", icao: "KASE", name: "Aspen / Pitkin County", city: "Aspen, CO", country: "United States", kind: "ga", runwayM: 2374 },
-  { iata: "VNY", icao: "KVNY", name: "Van Nuys", city: "Los Angeles, CA", country: "United States", kind: "ga", runwayM: 2477 },
-  { iata: "LAS", icao: "KLAS", name: "Harry Reid Intl", city: "Las Vegas, NV", country: "United States", kind: "international", runwayM: 4423 },
-  { iata: "LHR", icao: "EGLL", name: "Heathrow", city: "London", country: "United Kingdom", kind: "international", runwayM: 3902 },
+  { iata: "CLT", icao: "KCLT", name: "Charlotte Douglas Intl", city: "Charlotte, NC", country: "United States", kind: "international", runwayM: 3048, lat: 35.214, lng: -80.9431, tz: "America/New_York" },
+  { iata: "JQF", icao: "KJQF", name: "Concord–Padgett Regional", city: "Concord, NC", country: "United States", kind: "ga", runwayM: 2286, lat: 35.3877, lng: -80.7091, tz: "America/New_York" },
+  { iata: "EQY", icao: "KEQY", name: "Charlotte–Monroe Executive", city: "Monroe, NC", country: "United States", kind: "ga", runwayM: 1524, lat: 35.0187, lng: -80.6201, tz: "America/New_York" },
+  { iata: "TEB", icao: "KTEB", name: "Teterboro", city: "New York, NJ", country: "United States", kind: "ga", runwayM: 2131, lat: 40.8501, lng: -74.0608, tz: "America/New_York" },
+  { iata: "JFK", icao: "KJFK", name: "John F. Kennedy Intl", city: "New York, NY", country: "United States", kind: "international", runwayM: 4423, lat: 40.6413, lng: -73.7781, tz: "America/New_York" },
+  { iata: "BED", icao: "KBED", name: "Hanscom Field", city: "Boston, MA", country: "United States", kind: "ga", runwayM: 2130, lat: 42.47, lng: -71.289, tz: "America/New_York" },
+  { iata: "IAD", icao: "KIAD", name: "Washington Dulles Intl", city: "Washington, DC", country: "United States", kind: "international", runwayM: 3506, lat: 38.9531, lng: -77.4565, tz: "America/New_York" },
+  { iata: "PBI", icao: "KPBI", name: "Palm Beach Intl", city: "West Palm Beach, FL", country: "United States", kind: "international", runwayM: 3213, lat: 26.6832, lng: -80.0956, tz: "America/New_York" },
+  { iata: "OPF", icao: "KOPF", name: "Miami–Opa-locka Executive", city: "Miami, FL", country: "United States", kind: "ga", runwayM: 2621, lat: 25.907, lng: -80.2784, tz: "America/New_York" },
+  { iata: "MIA", icao: "KMIA", name: "Miami Intl", city: "Miami, FL", country: "United States", kind: "international", runwayM: 4000, lat: 25.7959, lng: -80.287, tz: "America/New_York" },
+  { iata: "APF", icao: "KAPF", name: "Naples Municipal", city: "Naples, FL", country: "United States", kind: "ga", runwayM: 1602, lat: 26.1526, lng: -81.7753, tz: "America/New_York" },
+  { iata: "HHH", icao: "KHXD", name: "Hilton Head", city: "Hilton Head Island, SC", country: "United States", kind: "ga", runwayM: 1460, lat: 32.2244, lng: -80.6975, tz: "America/New_York" },
+  { iata: "ATL", icao: "KATL", name: "Hartsfield–Jackson", city: "Atlanta, GA", country: "United States", kind: "international", runwayM: 3776, lat: 33.6407, lng: -84.4277, tz: "America/New_York" },
+  { iata: "FTY", icao: "KFTY", name: "Fulton County Executive", city: "Atlanta, GA", country: "United States", kind: "ga", runwayM: 1817, lat: 33.7791, lng: -84.5214, tz: "America/New_York" },
+  { iata: "DAL", icao: "KDAL", name: "Dallas Love Field", city: "Dallas, TX", country: "United States", kind: "domestic", runwayM: 2530, lat: 32.8471, lng: -96.8518, tz: "America/Chicago" },
+  { iata: "ASE", icao: "KASE", name: "Aspen / Pitkin County", city: "Aspen, CO", country: "United States", kind: "ga", runwayM: 2374, lat: 39.2232, lng: -106.8687, tz: "America/Denver" },
+  { iata: "VNY", icao: "KVNY", name: "Van Nuys", city: "Los Angeles, CA", country: "United States", kind: "ga", runwayM: 2477, lat: 34.2098, lng: -118.4899, tz: "America/Los_Angeles" },
+  { iata: "LAS", icao: "KLAS", name: "Harry Reid Intl", city: "Las Vegas, NV", country: "United States", kind: "international", runwayM: 4423, lat: 36.084, lng: -115.1537, tz: "America/Los_Angeles" },
+  { iata: "LHR", icao: "EGLL", name: "Heathrow", city: "London", country: "United Kingdom", kind: "international", runwayM: 3902, lat: 51.47, lng: -0.4543, tz: "Europe/London" },
 ];
 
 export function findAirport(code: string): Airport | undefined {
@@ -368,98 +373,9 @@ export interface Quote {
   expiresInMinutes: number;
 }
 
-const cltTeb = {
-  from: { iata: "CLT", icao: "KCLT", name: "Charlotte Douglas Intl", time: "09:40", tz: "EDT" },
-  to: { iata: "TEB", icao: "KTEB", name: "Teterboro", time: "11:20", tz: "EDT" },
-};
-
-export const quotes: Quote[] = [
-  {
-    id: "q-8241",
-    operator: "Modern Air Charter",
-    safety: "ARGUS Platinum",
-    aircraftSlug: "citation-xls-n720ma",
-    aircraftModel: "Citation XLS+",
-    registration: "N720MA",
-    category: "Midsize",
-    ...cltTeb,
-    durationMinutes: 100,
-    seats: 8,
-    totalUsd: 22400,
-    breakdown: [
-      { label: "Aircraft (1.7 block hours)", amountUsd: 19800 },
-      { label: "Fuel surcharge", amountUsd: 900 },
-      { label: "Landing & handling", amountUsd: 780 },
-      { label: "Catering (standard)", amountUsd: 320 },
-      { label: "Federal excise tax & segment fees", amountUsd: 600 },
-    ],
-    inclusions: [
-      { label: "Crew, fuel, landing and handling", included: true },
-      { label: "Standard catering and beverages", included: true },
-      { label: "FBO lounge access at each end", included: true },
-      { label: "De-icing and overnight crew fees", included: false },
-    ],
-    expiresInMinutes: 214,
-  },
-  {
-    id: "q-8242",
-    operator: "Carolina Jet Partners",
-    safety: "ARGUS Gold",
-    aircraftSlug: "phenom-300e-n355cj",
-    aircraftModel: "Phenom 300E",
-    registration: "N355CJ",
-    category: "Light",
-    ...cltTeb,
-    durationMinutes: 105,
-    seats: 7,
-    totalUsd: 18600,
-    breakdown: [
-      { label: "Aircraft (1.7 block hours)", amountUsd: 16200 },
-      { label: "Fuel surcharge", amountUsd: 780 },
-      { label: "Landing & handling", amountUsd: 720 },
-      { label: "Catering (standard)", amountUsd: 300 },
-      { label: "Federal excise tax & segment fees", amountUsd: 600 },
-    ],
-    inclusions: [
-      { label: "Crew, fuel, landing and handling", included: true },
-      { label: "Standard catering and beverages", included: true },
-      { label: "FBO lounge access at each end", included: true },
-      { label: "Enclosed lavatory", included: true },
-    ],
-    expiresInMinutes: 47,
-  },
-  {
-    id: "q-8243",
-    operator: "Queen City Air",
-    safety: "ARGUS Platinum",
-    aircraftSlug: "legacy-500-n500qc",
-    aircraftModel: "Legacy 500",
-    registration: "N500QC",
-    category: "Midsize",
-    ...cltTeb,
-    durationMinutes: 98,
-    seats: 8,
-    totalUsd: 28900,
-    breakdown: [
-      { label: "Aircraft (1.7 block hours)", amountUsd: 25800 },
-      { label: "Fuel surcharge", amountUsd: 1100 },
-      { label: "Landing & handling", amountUsd: 820 },
-      { label: "Catering (premium)", amountUsd: 480 },
-      { label: "Federal excise tax & segment fees", amountUsd: 700 },
-    ],
-    inclusions: [
-      { label: "Crew, fuel, landing and handling", included: true },
-      { label: "Premium catering and full bar", included: true },
-      { label: "Wi-Fi and flat-floor cabin", included: true },
-      { label: "De-icing and overnight crew fees", included: false },
-    ],
-    expiresInMinutes: 356,
-  },
-];
-
-export function findQuote(id: string): Quote | undefined {
-  return quotes.find((q) => q.id === id);
-}
+// Quotes are generated per request and stored in Postgres — see
+// generateQuotes in src/lib/quote.ts and the createQuoteRequest action. The
+// Quote type above describes the shape the quote UI renders.
 
 /* ─────────────────────────── Trips ─────────────────────────── */
 export type TripStatus = "upcoming" | "past" | "cancelled";

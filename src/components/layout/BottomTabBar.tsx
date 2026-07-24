@@ -2,21 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Plane, Ticket, User } from "lucide-react";
+import { Home, Plane, ShieldCheck, Tag } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /**
  * Mobile bottom tab bar (§11.3). 64px + safe-area inset, paper, top border,
  * four items. Active item: icon + label cyan-600, plus a 2px cyan bar 24px
  * wide at the top edge. Minimum tap target 48×48. Hidden on ≥1024px and on
- * the booking wizard.
+ * the request wizard.
  */
 
 const tabs = [
   { label: "Home", href: "/", icon: Home },
   { label: "Fleet", href: "/fleet", icon: Plane },
-  { label: "Trips", href: "/trips", icon: Ticket },
-  { label: "Account", href: "/account", icon: User },
+  { label: "Empty legs", href: "/empty-legs", icon: Tag },
+  { label: "Safety", href: "/safety", icon: ShieldCheck },
 ];
 
 export function BottomTabBar() {

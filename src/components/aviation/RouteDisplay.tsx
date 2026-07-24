@@ -50,7 +50,8 @@ export function RouteDisplay({
 }: {
   from: RoutePoint;
   to: RoutePoint;
-  durationMinutes: number;
+  /** Omit when the flight time isn't known yet — an unpriced request has none. */
+  durationMinutes?: number;
   stops?: string;
   dark?: boolean;
   className?: string;
@@ -109,7 +110,7 @@ export function RouteDisplay({
 
       {/* Duration centred below the line */}
       <p className={cn("mt-2 text-center type-data-sm", subColor)}>
-        {formatDuration(durationMinutes)} · {stops}
+        {durationMinutes === undefined ? stops : `${formatDuration(durationMinutes)} · ${stops}`}
       </p>
     </div>
   );
